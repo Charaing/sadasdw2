@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>카드지갑 챌린지</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@600;900&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#f5f1e8;--card:#fffdf8;--ink:#1b1a17;--sub:#6f695e;--line:#e3dccb;--red:#c8102e;--green:#1f7a4d;--gold:#a8844e;--blue:#2b4c7e;--soft:#efe9dc}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{font-family:'Noto Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo',sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;-webkit-tap-highlight-color:transparent;word-break:keep-all}
+button{font:inherit;color:inherit}
+.serif{font-family:'Noto Serif KR',serif}
+.wrap{max-width:560px;margin:0 auto;padding:16px 16px 48px}
+.screen{display:none}.screen.on{display:block}
+.btn{display:block;width:100%;padding:14px 16px;border-radius:12px;border:1.5px solid var(--ink);background:var(--card);font-weight:700;font-size:15px;cursor:pointer;transition:transform .08s,background .2s}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--ink);color:#fff}
+.btn.ghost{border-color:var(--line);background:transparent;color:var(--sub)}
+.btn.red{border-color:var(--red);color:var(--red)}
+.btn:disabled{opacity:.45;cursor:default}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mt24{margin-top:24px}
+
+/* START */
+.hero{text-align:center;padding:26px 0 6px}
+.eyebrow{font-size:11px;letter-spacing:.28em;color:var(--sub);font-weight:700}
+.title{font-family:'Noto Serif KR',serif;font-weight:900;font-size:clamp(30px,8.5vw,40px);line-height:1.2;margin:10px 0 6px}
+.subtitle{color:var(--sub);font-size:15px}
+.wallet{position:relative;width:220px;height:140px;margin:26px auto 22px;border-radius:16px;background:linear-gradient(145deg,#2a2622,#14120f);box-shadow:0 18px 30px -12px #0006,inset 0 1px 0 #ffffff1a;transform:rotate(-4deg)}
+.wallet:before{content:"";position:absolute;inset:8px;border:1.5px dashed #ffffff30;border-radius:11px}
+.wallet .slot{position:absolute;left:18px;right:18px;top:26px;height:34px;border-radius:6px;background:#0000004d;box-shadow:inset 0 2px 4px #0008}
+.wallet .card{position:absolute;left:30px;top:14px;width:120px;height:30px;border-radius:5px;background:linear-gradient(90deg,#d9c39a,#b08d57);box-shadow:0 2px 3px #0005}
+.wallet .tag{position:absolute;right:20px;bottom:18px;font-size:10px;letter-spacing:.3em;color:#d9c39a;font-weight:700}
+.wallet .shine{position:absolute;inset:0;border-radius:16px;background:linear-gradient(120deg,transparent 30%,#ffffff14 45%,transparent 60%);animation:shine 3.5s infinite}
+@keyframes shine{0%{transform:translateX(-30%)}60%,100%{transform:translateX(30%)}}
+.prize{display:inline-block;border:1.5px solid var(--ink);border-radius:999px;padding:6px 14px;font-weight:900;font-size:15px;background:var(--card)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.box h3{font-size:13px;letter-spacing:.12em;color:var(--sub);margin-bottom:8px}
+.box ul{list-style:none}
+.box li{padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px;display:flex;justify-content:space-between;gap:10px}
+.box li:last-child{border-bottom:0}
+.box li b{white-space:nowrap}
+.disc{font-size:11.5px;color:var(--sub);line-height:1.6;margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--soft)}
+.resume{font-size:12px;color:var(--sub);text-align:center;margin-top:6px}
+
+/* HUD */
+.hud{position:sticky;top:0;z-index:20;background:rgba(245,241,232,.93);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hud-in{max-width:560px;margin:0 auto;padding:10px 16px 10px}
+.hud-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hud-label{font-size:11px;color:var(--sub);letter-spacing:.08em;font-weight:700}
+.score{font-family:'Noto Serif KR',serif;font-weight:900;font-size:28px;line-height:1;transition:color .2s}
+.score small{font-size:14px;color:var(--sub);font-weight:600}
+.score.up{color:var(--green)}.score.down{color:var(--red)}
+.hud-btns{display:flex;gap:6px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 11px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.bar{height:8px;background:#e6dfcf;border-radius:99px;position:relative;margin-top:8px;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--ink);border-radius:99px;transition:width .35s ease}
+.bar.goal i{background:linear-gradient(90deg,var(--ink),var(--gold))}
+.mini{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:7px;font-size:11.5px;color:var(--sub)}
+.mini b{color:var(--ink)}
+
+/* QUESTION */
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 18px 20px;margin-top:14px;animation:fadeup .35s ease}
+.qmeta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--sub);font-weight:700}
+.qno{font-family:'Noto Serif KR',serif;font-size:15px;color:var(--ink)}
+.qprog{height:3px;background:var(--line);border-radius:3px;margin-top:10px;overflow:hidden}
+.qprog i{display:block;height:100%;background:var(--gold)}
+.qtext{font-size:clamp(21px,6vw,26px);font-weight:900;margin:16px 0 2px;line-height:1.35}
+.qpts{font-size:12px;color:var(--sub)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.opt{display:flex;align-items:center;gap:10px;min-height:64px;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:#fff;font-size:17px;font-weight:700;text-align:left;cursor:pointer;transition:border-color .15s,background .15s,transform .08s;animation:fadeup .35s ease both}
+.opt:nth-child(2){animation-delay:.04s}.opt:nth-child(3){animation-delay:.08s}.opt:nth-child(4){animation-delay:.12s}
+.opt:hover{border-color:var(--ink)}
+.opt:active{transform:scale(.98)}
+.opt .k{font-size:15px;color:var(--sub);flex:none}
+.opt:disabled{cursor:default}
+.opt.ok{border-color:var(--green);background:#e9f5ee}
+.opt.no{border-color:var(--red);background:#fbecee}
+.opt.dim{opacity:.45}
+.kbd-hint{font-size:11px;color:var(--sub);text-align:center;margin-top:10px}
+
+/* JUDGMENT */
+.jp{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;position:relative;overflow:hidden;animation:fadeup .3s ease}
+.jh{font-weight:900;letter-spacing:.04em;font-size:15px;display:flex;align-items:center;gap:8px}
+.jh .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.jh.bad .dot{background:var(--red)}
+.jrows{margin-top:10px}
+.jrow{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px;animation:fadeup .28s ease}
+.jrow .l{color:#3b372f}
+.jrow .l small{display:block;color:var(--sub);font-size:11.5px}
+.jrow .v{font-weight:900;white-space:nowrap;text-align:right}
+.plus{color:var(--green)}.minus{color:var(--red)}.zero{color:var(--sub)}.blue{color:var(--blue)}
+.jrow.rule{background:#eef2f8;margin:4px -10px;padding:8px 10px;border-radius:8px;border-bottom:0}
+.jrow.rule .v{color:var(--blue);white-space:normal;max-width:62%}
+.jrow.total{border-bottom:2px solid var(--ink);font-size:16px;font-weight:700}
+.cur{text-align:center;font-family:'Noto Serif KR',serif;font-weight:900;font-size:19px;margin:14px 0 4px;animation:fadeup .3s}
+.judge{display:flex;gap:10px;margin-top:14px;align-items:flex-start}
+.avatar{width:44px;height:44px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;flex:none;font-size:20px;position:relative}
+.avatar:after{content:"심판";position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--sub);white-space:nowrap}
+.bubble{background:var(--soft);border-radius:4px 14px 14px 14px;padding:10px 13px;font-size:14px;flex:1;min-height:44px}
+.bubble p{min-height:1.4em}
+.bubble p+p{margin-top:3px}
+.caret:after{content:"▍";animation:blink .8s infinite;color:var(--sub)}
+@keyframes blink{50%{opacity:0}}
+.verdict{margin-top:20px;padding:12px;border:2px solid var(--ink);border-radius:10px;text-align:center;font-weight:900;font-size:15px;animation:fadeup .3s}
+.verdict small{display:block;font-size:11px;color:var(--sub);letter-spacing:.15em;margin-bottom:2px}
+.stamp{position:absolute;right:12px;top:12px;border:3px solid var(--red);color:var(--red);padding:3px 10px;transform:rotate(-9deg);font-weight:900;border-radius:6px;font-size:13px;letter-spacing:.05em;background:#fffdf8d0;animation:stamp .35s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes stamp{from{transform:rotate(-9deg) scale(2.4);opacity:0}to{transform:rotate(-9deg) scale(1);opacity:.9}}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.acts .full{grid-column:1/-1}
+.acts .btn{padding:12px;font-size:14px}
+
+/* PREFLOW */
+.pf{text-align:center;padding:8px 0}
+.pf-t{font-weight:900;font-size:16px}
+.pf-s{font-size:13px;color:var(--sub);margin:6px 0 14px}
+.pf-timer{font-size:13px;margin-top:10px;color:var(--red);font-weight:700}
+.pf-timer b{font-family:ui-monospace,Menlo,monospace;font-size:16px}
+.spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--ink);border-radius:50%;margin:6px auto;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pbar{height:12px;border-radius:99px;background:var(--line);overflow:hidden;margin:12px 0 6px}
+.pbar i{display:block;height:100%;width:0;background:var(--blue);transition:width .25s}
+.steps{text-align:left;max-width:320px;margin:8px auto 0;font-size:14px}
+.steps div{padding:7px 10px;border:1px solid var(--line);border-radius:8px;margin-top:6px;display:flex;justify-content:space-between;animation:fadeup .25s;background:#fff}
+.steps .ok{color:var(--green);font-weight:900}
+.steps .bad{color:var(--red);font-weight:900}
+.notice{border:2px solid var(--ink);border-radius:10px;padding:12px;text-align:left;font-size:13.5px;background:#fff;animation:fadeup .3s}
+.notice .nt{font-weight:900;margin-bottom:4px}
+
+/* MODAL */
+.modal{position:fixed;inset:0;background:#15120ecc;z-index:60;display:flex;align-items:flex-end;justify-content:center;animation:fade .2s}
+@media(min-width:640px){.modal{align-items:center;padding:20px}}
+.sheet{background:var(--card);width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:20px 20px 0 0;padding:20px 18px 24px;animation:sheet .28s ease;-webkit-overflow-scrolling:touch}
+@media(min-width:640px){.sheet{border-radius:20px}}
+@keyframes sheet{from{transform:translateY(30px);opacity:0}}
+.sheet h2{font-family:'Noto Serif KR',serif;font-size:20px;font-weight:900}
+.sheet .sh-sub{font-size:12px;color:var(--sub);margin-top:2px}
+.sheet .x{float:right;border:0;background:var(--soft);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px}
+.dl{margin-top:14px;border-top:2px solid var(--ink)}
+.dl>div{display:grid;grid-template-columns:92px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.dl dt,.dl .k{color:var(--sub);font-weight:700;font-size:12px}
+.dl ol{padding-left:18px}
+.calc{width:100%;border-collapse:collapse;font-size:13.5px}
+.calc td{padding:6px 0;border-bottom:1px dashed var(--line)}
+.calc td:last-child{text-align:right;font-weight:900;white-space:nowrap;padding-left:10px}
+.calc tr.sum td{border-top:2px solid var(--ink);border-bottom:0;font-size:15px}
+.rb-tabs{display:flex;gap:6px;overflow:auto;margin:14px -2px 4px;padding:2px}
+.rb-item{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:8px;background:#fff}
+.rb-item.hit{border-color:var(--ink)}
+.rb-item.hl{box-shadow:0 0 0 3px var(--gold)}
+.rb-h{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.rb-h b{font-size:14.5px}
+.rb-no{font-family:'Noto Serif KR',serif;font-weight:900;color:var(--blue);font-size:13px;white-space:nowrap}
+.rb-m{font-size:12.5px;color:#4a463d;margin-top:4px}
+.rb-m span{color:var(--sub);font-weight:700}
+.rb-st{font-size:11.5px;margin-top:6px;font-weight:700;color:var(--sub)}
+.rb-st.on{color:var(--red)}
+.ap-box{margin-top:14px;padding:14px;border-radius:12px;background:var(--soft);font-size:14px}
+.ap-box .ref{font-size:12px;color:var(--blue);font-weight:900;margin-bottom:4px}
+.ap-ok{color:var(--red);font-weight:900;font-size:18px;text-align:center;margin-top:12px}
+
+/* CELEBRATION */
+.celebrate{position:fixed;inset:0;z-index:55;background:radial-gradient(circle at 50% 40%,#2c2620,#0d0b09);color:#fff;display:flex;align-items:center;justify-content:center;padding:20px;animation:fade .3s;overflow:auto}
+.cel-box{width:100%;max-width:440px;text-align:center}
+.cel-1{font-size:clamp(34px,10vw,52px);font-weight:900;font-family:'Noto Serif KR',serif}
+.cel-2{font-size:22px;color:#d9c39a;font-weight:900;margin-top:4px}
+.cel-score{font-family:'Noto Serif KR',serif;font-size:clamp(80px,26vw,130px);font-weight:900;line-height:1;margin:18px 0 6px;transition:transform .25s,color .25s}
+.cel-score.pop{transform:scale(1.15);color:#ffe3a3}
+.cel-score small{font-size:28px;color:#ffffff80}
+.cel-3{font-size:20px;font-weight:900;min-height:32px;color:#ffe3a3}
+.settle{background:var(--card);color:var(--ink);border-radius:18px;padding:18px;text-align:left;animation:sheet .35s ease;position:relative;overflow:hidden}
+.settle h3{font-family:'Noto Serif KR',serif;font-weight:900;font-size:18px;text-align:center;margin-bottom:10px}
+.confetti{position:fixed;top:-20px;width:9px;height:14px;z-index:58;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+
+/* END */
+.end-h{text-align:center;padding:24px 0 6px}
+.end-h .eyebrow{font-size:12px}
+.end-h h2{font-family:'Noto Serif KR',serif;font-weight:900;font-size:30px;margin-top:6px}
+.result-tbl{margin-top:14px}
+.result-tbl li b.red{color:var(--red)}
+.fail{position:relative;text-align:center;margin:22px 0 4px}
+.fail span{display:inline-block;border:4px solid var(--red);color:var(--red);font-weight:900;font-size:30px;padding:4px 22px;border-radius:10px;transform:rotate(-6deg);animation:stamp .4s cubic-bezier(.2,1.6,.4,1) both;font-family:'Noto Serif KR',serif}
+.big{font-size:clamp(46px,15vw,92px);font-weight:900;text-align:center;line-height:1.08;margin:28px 0 10px;animation:bigin .55s cubic-bezier(.2,1.5,.4,1) both;letter-spacing:-.02em}
+@keyframes bigin{from{transform:scale(.3);opacity:0}}
+.small-lines{text-align:center;color:var(--sub);font-size:14px}
+.hidden{display:none!important}
+
+@keyframes fadeup{from{opacity:0;transform:translateY(6px)}}
+@keyframes fade{from{opacity:0}}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+</style>
+</head>
+<body>
+
+<!-- START -->
+<section id="start" class="screen on">
+  <div class="wrap">
+    <div class="hero">
+      <div class="eyebrow">QUIZ CHALLENGE · 공정채점위원회 주관</div>
+      <h1 class="title">마뗑킴 카드지갑<br>챌린지</h1>
+      <p class="subtitle">아주 쉬운 상식 퀴즈 50문제.<br><b>30점</b>만 넘기면 카드지갑이 당신의 것!</p>
+      <div class="wallet" aria-hidden="true"><div class="slot"></div><div class="card"></div><div class="tag">CARD WALLET</div><div class="shine"></div></div>
+      <span class="prize">🎁 경품: 마뗑킴 카드지갑 (가상)</span>
+    </div>
+    <div class="box mt24">
+      <h3>참가 안내</h3>
+      <ul>
+        <li><span>문항 수</span><b>50문제</b></li>
+        <li><span>난이도</span><b>매우 쉬움</b></li>
+        <li><span>배점</span><b>정답 1개당 1점</b></li>
+        <li><span>상품 획득 조건</span><b>응모 점수 30점</b></li>
+        <li><span>채점 방식</span><b>공정한 규정에 따른 채점</b></li>
+      </ul>
+    </div>
+    <div class="mt16">
+      <button class="btn primary" id="btnStart">도전 시작하기</button>
+      <button class="btn mt8 hidden" id="btnResume">이어서 하기</button>
+      <div class="resume hidden" id="resumeInfo"></div>
+      <button class="btn ghost mt8" id="btnRulebookStart">📕 공식 채점 규정집 열람</button>
+    </div>
+    <div class="disc">
+      ※ 본 게임은 풍자 목적의 가상 퀴즈 게임입니다. 등장하는 상품은 게임 속 가상 경품이며 <b>실제로 지급되지 않습니다.</b><br>
+      ※ 마뗑킴(Matin Kim) 브랜드의 공식 이벤트가 아니며, 해당 브랜드와 아무런 관련이 없습니다. 경품 신청·결제 기능은 없습니다.<br>
+      ※ 게임 속 모든 규정·조항·부서는 가상이며 실제 법률이나 제도가 아닙니다.<br>
+      ※ 진행 상황은 이 기기의 브라우저에 자동 저장됩니다.
+    </div>
+  </div>
+</section>
+
+<!-- GAME -->
+<section id="game" class="screen">
+  <div class="hud">
+    <div class="hud-in">
+      <div class="hud-top">
+        <div>
+          <div class="hud-label">응모 점수 (공식)</div>
+          <div class="score" id="hudScore">0<small> / 30</small></div>
+        </div>
+        <div class="hud-btns">
+          <button class="chip" id="btnFast" title="연출 속도">⏩ 빠르게</button>
+          <button class="chip" id="btnRulebook">📕 규정집</button>
+          <button class="chip" id="btnHome">☰</button>
+        </div>
+      </div>
+      <div class="bar" id="hudBar"><i id="hudFill"></i></div>
+      <div class="mini">
+        <span>실제 정답 <b id="mCorrect">0</b></span>
+        <span>보류·예치 <b id="mHeld">0</b></span>
+        <span>일반 점수 <b id="mGeneral">0</b></span>
+        <span>차감 누계 <b id="mDed">0</b></span>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="qcard" id="qcard">
+      <div class="qmeta"><span class="qno" id="qno">제 1 문</span><span id="qcat">수학</span></div>
+      <div class="qprog"><i id="qprog"></i></div>
+      <div class="qtext" id="qtext"></div>
+      <div class="qpts" id="qpts"></div>
+      <div class="opts" id="opts"></div>
+      <div class="kbd-hint">키보드 1~4 로도 선택할 수 있습니다 · Enter 다음 문제</div>
+    </div>
+    <div class="jp hidden" id="jp"></div>
+  </div>
+</section>
+
+<!-- END -->
+<section id="end" class="screen">
+  <div class="wrap" id="endWrap"></div>
+</section>
+
+<div id="modalRoot"></div>
+
+<script>
+'use strict';
+/* =========================================================
+   데이터: 문제 50개
+   ========================================================= */
+const SAVE_KEY='mk_cardwallet_challenge_save';
+const TARGET=30;
+const OFFICIAL_CAP=28;
+const Q=[
+{t:'3 + 3 = ?',o:['5','6','7','8'],a:1,c:'수학',y:'add'},
+{t:'일주일은 며칠일까요?',o:['5일','6일','7일','8일'],a:2,c:'상식'},
+{t:'대한민국의 수도는?',o:['부산','서울','대구','인천'],a:1,c:'지리'},
+{t:'2 + 5 = ?',o:['6','7','8','9'],a:1,c:'수학',y:'add'},
+{t:'물의 화학식은?',o:['H₂O','CO₂','O₂','NaCl'],a:0,c:'과학'},
+{t:'무지개는 보통 몇 가지 색으로 표현할까요?',o:['5가지','6가지','7가지','8가지'],a:2,c:'상식'},
+{t:'1년은 몇 개월일까요?',o:['10개월','11개월','12개월','13개월'],a:2,c:'상식'},
+{t:'강아지의 다리는 몇 개일까요?',o:['2개','3개','4개','6개'],a:2,c:'동물'},
+{t:'해가 뜨는 방향은?',o:['동쪽','서쪽','남쪽','북쪽'],a:0,c:'과학'},
+{t:'4 + 4 = ?',o:['6','7','8','9'],a:2,c:'수학',y:'add'},
+{t:'빨강과 노랑을 섞으면 무슨 색이 될까요?',o:['초록','주황','보라','파랑'],a:1,c:'미술'},
+{t:'고양이의 울음소리는?',o:['멍멍','야옹','꽥꽥','음메'],a:1,c:'동물'},
+{t:'10 − 3 = ?',o:['6','7','8','9'],a:1,c:'수학',y:'sub'},
+{t:'얼음이 녹으면 무엇이 될까요?',o:['물','불','흙','돌'],a:0,c:'과학'},
+{t:'하루는 몇 시간일까요?',o:['12시간','20시간','24시간','30시간'],a:2,c:'상식'},
+{t:'잘 익은 바나나의 색은?',o:['파랑','노랑','보라','검정'],a:1,c:'상식'},
+{t:'5 × 2 = ?',o:['7','10','12','25'],a:1,c:'수학',y:'mul'},
+{t:'지구 주위를 도는 위성은?',o:['화성','달','태양','금성'],a:1,c:'과학'},
+{t:'한글을 만든 왕은?',o:['세종대왕','이순신','광개토대왕','장영실'],a:0,c:'역사'},
+{t:'1 + 1 = ?',o:['1','2','3','11'],a:1,c:'수학',y:'add'},
+{t:'삼각형의 변은 몇 개일까요?',o:['2개','3개','4개','5개'],a:1,c:'수학'},
+{t:'펭귄은 어떤 동물일까요?',o:['포유류','조류','파충류','어류'],a:1,c:'동물'},
+{t:'9 − 4 = ?',o:['3','4','5','6'],a:2,c:'수학',y:'sub'},
+{t:'봄 다음에 오는 계절은?',o:['겨울','가을','여름','봄'],a:2,c:'상식'},
+{t:'100원짜리 동전 2개는 얼마일까요?',o:['100원','150원','200원','300원'],a:2,c:'상식'},
+{t:'오른손의 반대쪽 손은?',o:['오른발','왼손','머리','무릎'],a:1,c:'상식'},
+{t:'7 + 2 = ?',o:['8','9','10','11'],a:1,c:'수학',y:'add'},
+{t:'축구공의 모양은?',o:['네모','세모','둥근 공 모양','별 모양'],a:2,c:'상식'},
+{t:'1시간은 몇 분일까요?',o:['30분','60분','90분','100분'],a:1,c:'상식'},
+{t:'6 ÷ 2 = ?',o:['2','3','4','6'],a:1,c:'수학',y:'div'},
+{t:'신호등에서 멈춰야 하는 불의 색은?',o:['초록','노랑','빨강','파랑'],a:2,c:'생활'},
+{t:'눈이 가장 많이 오는 계절은?',o:['봄','여름','가을','겨울'],a:3,c:'상식'},
+{t:'8 + 1 = ?',o:['7','8','9','10'],a:2,c:'수학',y:'add'},
+{t:'"사과"를 영어로 하면?',o:['Banana','Apple','Grape','Melon'],a:1,c:'영어'},
+{t:'한 손의 손가락은 몇 개일까요?',o:['4개','5개','6개','10개'],a:1,c:'상식'},
+{t:'2 × 3 = ?',o:['5','6','8','9'],a:1,c:'수학',y:'mul'},
+{t:'바닷물은 무슨 맛일까요?',o:['단맛','짠맛','신맛','쓴맛'],a:1,c:'과학'},
+{t:'1분은 몇 초일까요?',o:['30초','60초','100초','120초'],a:1,c:'상식'},
+{t:'5 + 5 = ?',o:['9','10','11','12'],a:1,c:'수학',y:'add'},
+{t:'태극기 가운데에 있는 무늬는?',o:['태극','별','달','해'],a:0,c:'상식'},
+{t:'우유를 주는 대표적인 동물은?',o:['닭','소','개구리','붕어'],a:1,c:'동물'},
+{t:'3 × 3 = ?',o:['6','8','9','12'],a:2,c:'수학',y:'mul'},
+{t:'연필을 깎을 때 쓰는 도구는?',o:['지우개','연필깎이','자','풀'],a:1,c:'생활'},
+{t:'20 − 10 = ?',o:['5','10','15','20'],a:1,c:'수학',y:'sub'},
+{t:'대한민국 국기의 이름은?',o:['태극기','일장기','성조기','오성홍기'],a:0,c:'상식'},
+{t:'겨울 다음에 오는 계절은?',o:['봄','여름','가을','겨울'],a:0,c:'상식'},
+{t:'2 + 2 = ?',o:['3','4','5','22'],a:1,c:'수학',y:'add'},
+{t:'맑은 날 하늘의 색은?',o:['빨강','초록','파랑','검정'],a:2,c:'상식'},
+{t:'평년의 1년은 며칠일까요?',o:['300일','365일','400일','500일'],a:1,c:'상식'},
+{t:'10 + 10 = ?',o:['10','20','30','40'],a:1,c:'수학',y:'add'}
+];
+
+/* =========================================================
+   유틸
+   ========================================================= */
+const it=(l,d,o)=>Object.assign({l,d},o||{});
+const pad=(n,w=2)=>String(n).padStart(w,'0');
+const fmtT=ms=>{const d=new Date(ms);return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(),3)}`};
+const fmtD=ms=>{const d=new Date(ms);return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}`};
+const sec=ms=>(ms/1000).toFixed(2)+'초';
+const r1=v=>Math.round(v*10)/10;
+const fmtN=v=>{v=r1(v);return Number.isInteger(v)?String(v):v.toFixed(1)};
+const sgn=v=>{v=r1(v);return v>0?'+'+fmtN(v):v<0?'−'+fmtN(-v):'±0'};
+const ansText=n=>Q[n-1].o[Q[n-1].a];
+const docNo=(p,c)=>`${p}-${pad(c.n)}-${String(c.answeredAt).slice(-6)}`;
+
+const SEC={A:'A. 세금과 수수료',B:'B. 답안 제출 절차',C:'C. 규정과 행정 처리',D:'D. 채점 기준의 함정',E:'E. 마지막 단계의 특별 규정'};
+
+/* 기본 지급 항목: 제11~43문은 '성실 참여 장려금'(구제 제도), 제44~49문은 응원 메시지(0점), 제50문은 특별 배점 2점 */
+function baseItems(n,baseOverride){
+  if(n===50) return [it('마지막 문제 특별 배점',2,{k:'base'})];
+  const a=[it(baseOverride!=null?`기본 획득 점수 (본 문항 배점 ${fmtN(baseOverride)}점)`:'기본 획득 점수 (정답)',baseOverride!=null?baseOverride:1,{k:'base'})];
+  if(n>=11&&n<=43) a.push(it('성실 참여 장려금 (참가자 구제 제도)',1,{k:'base'}));
+  else if(n>=44) a.push(it('응원 메시지 💌 「끝까지 힘내세요!」',0,{k:'base'}));
+  return a;
+}
+
+/* =========================================================
+   규정 50개 — 각 규정의 적용 대상·발생 조건·처리 로직
+   fn(c) → {cl:조항, rec:처리 기록[], ded:차감 항목[], judge:심판 대사[], base?:배점 조정}
+   c: {n, before, streak, hist, elapsed, input, cx, cy, confirmInTime, confirmMs, reconfirm, shownAt, answeredAt, now}
+   ========================================================= */
+const RULES=[
+/* ---------- A. 세금과 수수료 ---------- */
+{n:1,s:'A',t:'정답 소득세',target:'정답으로 점수 소득이 발생한 모든 참가자',cond:'정답 판정으로 1점 이상의 점수 소득이 발생한 경우',
+fn:c=>({cl:'제1조 1항',rec:[`제${c.n}문 정답 판정 → 점수 소득 1점 발생`,'과세 표준: 1점 / 세율: 100% (정답 소득 단일세율)','산출 세액: 1점 × 100% = 1점 (원천징수)'],
+ded:[it('정답 소득세 (세율 100%)',-1)],judge:['정답을 맞히신 것은 축하드립니다.','다만 정답을 통해 발생한 소득에 대한 세금이 부과되었습니다.','소득이 발생했으니 납세 의무가 있습니다.']})},
+{n:2,s:'A',t:'정답 처리 수수료',target:'정답 판정 처리가 완료된 답안',cond:'답안 접수 → 정답 대조 → 판정 기록의 3단계 처리가 완료된 경우',
+fn:c=>({cl:'제2조 1항',rec:['처리 단계: 답안 접수 → 정답 대조 → 판정 기록 (3단계 완료)','처리 단가: 정액 1점 (단계 수와 무관)'],
+ded:[it('답안 처리 수수료',-1)],judge:['정답이 맞는지 꼼꼼히 확인해 드렸습니다.','정답을 확인하는 데도 비용이 발생합니다.']})},
+{n:3,s:'A',t:'정답 지급 수수료',target:'정답 점수를 계정에 지급받는 참가자',cond:'정답 점수의 계정 지급 신청이 발생한 경우',
+fn:c=>({cl:'제3조 1항',rec:['정답 점수 1점 → 참가자 계정 지급 신청 자동 접수','지급 수수료: 지급액과 무관하게 정액 1점 (선공제)'],
+ded:[it('정답 지급 수수료',-1)],judge:['점수는 정상적으로 지급되었습니다.','정답을 맞히는 것과 점수를 지급받는 것은 별개의 절차입니다.']})},
+{n:4,s:'A',t:'정답 보관료',target:'정답 점수 보관 서비스를 이용한 참가자',cond:'정답 점수가 시스템 보관소에 1회 이상 보관된 경우 (자동 보관)',
+fn:c=>({cl:'제4조 1항',rec:[`보관 대상: 제${c.n}문 정답 점수 1점`,'보관 기간: 0.4초 (보관 즉시 정산)','시스템 유지비: 보관 건당 1점 (기간 무관 정액)'],
+ded:[it('정답 보관료 (시스템 유지비)',-1)],judge:['획득하신 점수는 안전하게 보관해 드렸습니다.','보관료는 보관 기간과 무관하게 정액입니다.']})},
+{n:5,s:'A',t:'정답 인증료',target:'상품 응모 점수에 반영되는 모든 정답',cond:'정답을 상품 응모 점수로 반영하기 위해 공식 인증서가 발급된 경우',
+fn:c=>({cl:'제5조 2항',rec:['정답 여부 확인: 완료',`공식 정답 인증서 발급: ${docNo('CERT',c)}`,'인증서 발급 비용: 1점'],
+ded:[it('정답 인증료 (인증서 발급)',-1)],judge:['정답이라는 사실은 확인되었습니다.','인증 없는 정답은 상품 응모 점수에 반영할 수 없습니다.','그래서 인증해 드렸고, 인증료가 발생했습니다.']})},
+{n:6,s:'A',t:'특별 정답 부가세',target:'「특별 관리 문항」으로 지정된 문항의 정답',cond:'정답 소득세와 별도로, 특별 관리 문항에서 정답 소득이 발생한 경우',
+fn:c=>({cl:'제6조 1항',rec:[`제${c.n}문: 「특별 관리 문항」 지정`,'지정 사유: 무지개 관련 문항은 색상 수가 많아 관리 대상','특별 부가세: 정답 1건당 1점 (제1조 정답 소득세와 별개 세목)'],
+ded:[it('특별 정답 부가세',-1)],judge:['세금이 또 있냐고요?','세목이 다릅니다.']})},
+{n:7,s:'A',t:'정답 서비스 이용료',target:'정답 판정 기능을 이용한 참가자',cond:'문제 열람(무료) 외에 정답 판정·점수 연결 기능을 이용한 경우',
+fn:c=>({cl:'제7조 1항',rec:['문제 열람: 무료','정답 서비스 (정답 판정 및 점수 연결): 1회 1점','이용 횟수: 1회'],
+ded:[it('정답 서비스 이용료',-1)],judge:['문제는 무료로 제공해 드렸습니다.','문제 풀이와 정답 서비스는 별도 상품입니다.']})},
+{n:8,s:'A',t:'점수 반올림 (버림 적용)',target:'기본 점수가 조정된 문항',cond:'문항 기본 점수가 소수 단위로 조정되어 정수 처리가 필요한 경우',
+fn:c=>({cl:'제8조 1항',base:0.9,rec:[`제${c.n}문 기본 점수 조정: 1점 → 0.9점`,'조정 사유: 다리 개수 문제는 지나치게 쉬움 (난이도 보정)','점수 체계: 정수 점수제 — 소수점 이하 버림','0.9점 → 버림 → 0점'],
+ded:[it('정수 처리 (소수점 이하 버림)',-0.9)],judge:['반올림이 아니라 버림입니다. 규정에 그렇게 되어 있습니다.','0.9점은 1점이 아닙니다.']})},
+{n:9,s:'A',t:'정답 보험료',target:'정답 안심 보험 자동 가입 대상자',cond:'정답 점수가 발생하여 정답 안심 보험에 자동 가입된 경우',
+fn:c=>({cl:'제9조 1항',rec:['상품명: 정답 안심 보험 (자동 가입형)',`증권번호: ${docNo('INS',c)}`,'보장 내용: 정답 분실 시 정답 1개 재발급 (점수는 재발급 대상 아님)','보험료: 1점 (일시납, 즉시 만기)'],
+ded:[it('정답 보험료 (자동 가입)',-1)],judge:['고객님의 정답 보호를 위해 자동 가입되었습니다.','다행히 이번 정답은 분실되지 않았습니다.']})},
+{n:10,s:'A',t:'점수 이체 수수료',target:'임시 정답 계좌에서 공식 점수 계좌로 이체되는 점수',cond:'정답 점수가 임시 계좌에서 공식 계좌로 이체된 경우',
+fn:c=>({cl:'제10조 1항',rec:['출금 계좌: 임시 정답 계좌 (잔액 1점)','입금 계좌: 공식 점수 계좌','이체 금액: 1점 / 이체 수수료: 1점 (선공제)','입금액: 0점'],
+ded:[it('점수 이체 수수료',-1)],judge:['이체가 정상 완료되었습니다.','입금액은 0점입니다.']})},
+
+/* ---------- B. 답안 제출 절차 ---------- */
+{n:11,s:'B',t:'답안 제출 시간 규정',target:'문제 출력 후 제출된 모든 답안',cond:'1항: 출력 후 1.5초 이전 제출 / 2항: 1.5초 대기 구간 동안 제출 대기열을 점유한 경우',
+fn:c=>{const early=c.elapsed<1500;const rec=['문제 출력 완료 시각 기준 제출까지: '+sec(c.elapsed),'제출 가능 시점: 출력 후 1.50초 이후'];
+if(early) return {cl:'제11조 1항',rec:rec.concat(['판정: 조기 제출 (1항 위반)']),ded:[it('정답 점수 미인정 (조기 제출)',-1)],judge:['정답의 정확성과 제출 절차 준수는 별도 평가입니다.','1.5초를 기다리지 않으셨습니다.']};
+return {cl:'제11조 2항',rec:rec.concat(['1항 준수: 확인','2항: 1.5초 대기 구간 동안 제출 대기열을 점유한 답안에는 대기열 점유료 1점 부과']),ded:[it('제출 대기열 점유료',-1)],judge:['정답의 정확성과 제출 절차 준수는 별도 평가입니다.','기다려 주셔서 감사합니다. 기다리시는 동안 대기열을 쓰셨습니다.']};}},
+{n:12,s:'B',t:'답안 심사 접수 마감',target:'문항별 비공개 심사 접수 시간이 설정된 답안',cond:'1항: 비공개 접수 마감(문항 번호 × 0.1초) 이후 제출 / 3항: 제11조 1항 미준수 답안',
+fn:c=>{const dl=c.n*100;const rec=[`본 문항 심사 접수 마감: 출력 후 ${sec(dl)} (문항 번호 × 0.1초, 비공개)`,`제출 시각: 출력 후 ${sec(c.elapsed)}`];
+if(c.elapsed>dl) return {cl:'제12조 1항',rec:rec.concat(['판정: 접수 기간 종료 후 제출']),ded:[it('정답 점수 제외 (접수 마감)',-1)],judge:['접수 시간은 공개하지 않습니다. 공개하면 모두가 맞춰서 내니까요.','아쉽게도 마감 이후에 도착했습니다.']};
+return {cl:'제12조 3항',rec:rec.concat(['접수 마감 전 제출: 확인','3항: 제11조 1항(출력 후 1.5초 이전 제출 금지) 위반 답안은 접수 대상 제외']),ded:[it('정답 점수 제외 (접수 대상 아님)',-1)],judge:['마감 전에 내셨습니다. 훌륭합니다.','다만 너무 일찍 내셨습니다.']};}},
+{n:13,s:'B',t:'정답 버튼 중앙 접수 규정',target:'정답 버튼을 눌러 제출된 답안',cond:'1항: 버튼 가로·세로 중앙 30% 구역 외 입력 / 4항: 중앙 구역 정밀 입력',
+fn:c=>{const hit=c.cx!=null&&Math.abs(c.cx-.5)<=.15&&Math.abs(c.cy-.5)<=.15;
+const pos=c.cx==null?'입력 좌표: 확인 불가 (좌표 없는 입력)':`입력 좌표: 가로 ${Math.round(c.cx*100)}% · 세로 ${Math.round(c.cy*100)}% 지점`;
+const rec=['공식 접수 구역: 정답 버튼의 가로·세로 중앙 30% (35%~65%)',pos];
+if(!hit) return {cl:'제13조 1항',rec:rec.concat(['판정: 접수 구역 외 입력 → 「정답 미리보기」로 처리']),ded:[it('정답 점수 미지급 (미리보기 처리)',-1)],judge:['방금 누르신 곳은 정답 미리보기 영역입니다.','정답을 미리 보신 것이지, 제출하신 것은 아닙니다.']};
+return {cl:'제13조 4항',rec:rec.concat(['판정: 접수 구역 내 입력 확인','4항: 중앙 정밀 입력은 「특급 접수」로 분류되어 특급 접수료 1점 부과']),ded:[it('특급 접수료 (정밀 입력)',-1)],judge:['정중앙을 정확히 누르셨네요. 대단하십니다.','정밀 접수는 특급 서비스로 처리됩니다.']};}},
+{n:14,s:'B',t:'접수번호 미발급',target:'접수번호가 생성되지 않은 답안',cond:'답안은 수신되었으나 접수번호 생성 절차가 완료되지 않은 경우',
+fn:c=>({cl:'제14조 1항',rec:['답안 수신: 완료','접수번호 생성 절차: 대기 중 (생성 서버 응답 없음)','접수번호 없는 답안의 정답 점수: 승인 보류 (보류 기간: 접수번호 발급 시까지)'],
+ded:[it('정답 점수 승인 보류',-1,{h:1})],judge:['답을 제출하신 건 맞습니다.','다만 접수된 건 아닙니다.']})},
+{n:15,s:'B',t:'사전 동의 누락',target:'정답 활용 및 장려금 수령 동의 기록이 없는 참가자',cond:'정답 제출 전 「정답 활용 동의」 및 「장려금 수령 동의」 기록이 존재하지 않는 경우',
+fn:c=>({cl:'제15조 1항',rec:['정답 활용 동의: 기록 없음','장려금 수령 동의: 기록 없음','동의 절차 제공 여부: 본 규정의 판단 대상 아님'],
+ded:[it('정답 점수 인정 불가 (동의 기록 없음)',-1),it('장려금 지급 불가 (수령 동의 기록 없음)',-1)],judge:['동의하지 않으신 건 아닙니다.','하지만 동의한 기록도 없습니다.','기록이 없으면 처리할 수 없습니다.']})},
+{n:16,s:'B',t:'확인 절차 유효기간',target:'제출 확인 버튼 절차가 필요한 답안',cond:'1항: 확인 버튼 유효기간 내 미입력 / 2항: 확인 처리 완료 시점이 유효기간 경과',
+fn:c=>{const rec=['확인 버튼 발급: 정답 선택 1.40초 전 (사전 발급)','확인 버튼 유효기간: 발급 후 2.00초 (표시 시점 잔여 0.60초)'];
+if(!c.confirmInTime) return {cl:'제16조 1항',rec:rec.concat(['확인 입력: 없음 → 유효기간 만료']),ded:[it('신청 자동 취소 (확인 기한 만료)',-1)],judge:['확인 버튼의 유효기간이 지났습니다.','신청이 자동 취소되었습니다.']};
+return {cl:'제16조 2항',rec:rec.concat([`확인 입력: 표시 후 ${sec(c.confirmMs||0)} (유효기간 내 입력)`,'확인 처리 소요: 1.00초 → 처리 완료 시점 기준 유효기간 경과','2항: 유효기간 준수 여부는 「처리 완료 시점」 기준으로 판단']),ded:[it('신청 자동 취소 (처리 완료 시점 기한 경과)',-1)],judge:['빠르게 눌러 주셨습니다.','다만 유효기간은 누른 시점이 아니라 처리가 끝난 시점을 기준으로 봅니다.']};}},
+{n:17,s:'B',t:'이중 제출 금지',target:'동일 답안이 2회 이상 제출된 경우',cond:'1항: 재확인 버튼 입력으로 동일 답안이 재제출된 경우 / 3항: 미확인 답안의 시스템 자동 확인',
+fn:c=>{if(c.reconfirm) return {cl:'제17조 1항',rec:['최초 제출: 정답 선택','재확인 입력: 확인 버튼 (참가자 직접 입력)','동일 답안 제출 횟수: 2회'],ded:[it('중복 제출 → 정답 점수 무효',-1)],judge:['동일한 답안을 두 번 제출하셨습니다.','확인을 요청드린 것은 맞지만, 제출을 요청드린 것은 아닙니다.']};
+return {cl:'제17조 3항',rec:['최초 제출: 정답 선택','재확인 입력: 없음 (4초 경과)','3항: 미확인 답안은 시스템이 자동 확인 처리 (제출 1회로 간주)','동일 답안 제출 횟수: 최초 1회 + 자동 확인 1회 = 2회'],ded:[it('중복 제출 → 정답 점수 무효',-1)],judge:['확인하지 않으셔서 시스템이 대신 확인해 드렸습니다.','결과적으로 동일한 답안이 두 번 제출되었습니다.']};}},
+{n:18,s:'B',t:'제출 양식 불일치',target:'요구 양식과 다른 양식으로 제출된 답안',cond:'요구 양식 B-18(정답 선택 후 별도 인증)이 아닌 양식으로 제출된 경우',
+fn:c=>({cl:'제18조 1항',rec:['요구 양식: B-18 (정답 선택 후 별도 인증)','제출 양식: A (정답 선택)','양식 B-18 제공 여부: 본 규정의 판단 대상 아님','처리: 정답 인정 / 점수 지급 보류'],
+ded:[it('정답 점수 지급 보류 (양식 불일치)',-1,{h:1})],judge:['정답은 인정합니다. 양식이 다를 뿐입니다.','점수는 올바른 양식이 접수될 때까지 보류됩니다.']})},
+{n:19,s:'B',t:'승인 대기 시간 초과',target:'임시 승인 후 최종 승인을 기다리는 정답',cond:'임시 승인 후 3.00초 이내에 최종 승인이 이루어지지 않은 경우',
+fn:c=>({cl:'제19조 1항',rec:['임시 승인: 완료','최종 승인 담당: 정답승인과 (처리 상태: 지연)','승인 대기 허용 시간: 3.00초','실제 대기: 3.00초 초과 (처리 진행률 99%에서 정지)'],
+ded:[it('임시 승인 자동 취소 (대기 시간 초과)',-1)],judge:['임시 승인은 정상적으로 났습니다.','최종 승인이 늦어져 규정에 따라 자동 취소되었습니다.','부서 사정은 채점 결과와 무관합니다.']})},
+{n:20,s:'B',t:'심사일 기준 변경',target:'제출일과 최종 심사일의 채점 기준이 다른 답안',cond:'최종 심사일에 새로운 채점 기준이 적용된 경우 (제출 당시 기준은 적용하지 않음)',
+fn:c=>({cl:'제20조 1항',rec:['제출 당시 기준: 「정답 보기를 선택하면 1점」',`최종 심사일: ${fmtD(c.now)} ${fmtT(c.now)} (제출 직후)`,'심사일 기준: 「정답 보기 선택 + 선택 사유서 제출 시 1점」','선택 사유서 제출: 없음'],
+ded:[it('최종 심사 기준 미충족',-1)],judge:['제출하실 땐 분명히 맞는 답안이었습니다.','제출 당시 기준이 아닌 최종 심사 기준을 적용합니다.']})},
+
+/* ---------- C. 규정과 행정 처리 ---------- */
+{n:21,s:'C',t:'정답 인정 한도 초과',target:'제4구간(제18~21문) 정답',cond:'1항: 구간 내 정답 인정 3개 초과 / 4항: 구간 내 오답 이력으로 한도 산정 불가',
+fn:c=>{const cnt=c.hist.filter(h=>h.n>=18&&h.n<=20&&h.correct).length;const rec=['구간 설정: 제18~21문 (제4구간)','구간 정답 인정 한도: 3개',`구간 내 기존 정답 인정: ${cnt}개`];
+if(cnt>=3) return {cl:'제21조 1항',rec:rec.concat(['본 문항: 구간 4번째 정답 → 한도 초과']),ded:[it('한도 초과분 정답 점수 미인정',-1)],judge:['정답은 많을수록 좋지만, 한도는 한도입니다.','이 구간에서 인정 가능한 정답은 이미 모두 사용하셨습니다.']};
+return {cl:'제21조 4항',rec:rec.concat(['4항: 구간 내 오답 이력이 있으면 「한도 산정 불가」로 분류','산정 완료 전 정답: 인정 유예 (유예 기간 종료 시 소멸)']),ded:[it('정답 인정 유예 (한도 산정 불가)',-1)],judge:['한도가 남았는지 계산할 수가 없습니다.','계산이 끝날 때까지 인정을 미룹니다.']};}},
+{n:22,s:'C',t:'정답 지급 예산 소진',target:'점수 예산이 배정된 모든 문항',cond:'해당 문항의 정답 점수 예산 및 장려금 예산 잔액이 0점인 경우',
+fn:c=>({cl:'제22조 1항',rec:[`제${c.n}문 정답 점수 예산: 0점 (편성 기준: 전년도 지급 실적 0점)`,`제${c.n}문 장려금 예산: 0점`,'잔여 예산: 0점'],
+ded:[it('정답 점수 지급 불가 (예산 소진)',-1),it('장려금 지급 불가 (예산 소진)',-1)],judge:['정답은 인정합니다.','다만 지급할 수 있는 점수가 없습니다.','정답 예산은 한정되어 있습니다.']})},
+{n:23,s:'C',t:'정답 적립 기간 종료',target:'획득 시점과 지급 시점이 다른 정답 점수',cond:'점수 지급 시점에 해당 정답의 적립 기간이 이미 종료된 경우',
+fn:c=>({cl:'제23조 1항',rec:[`정답 획득 시각: ${fmtT(c.answeredAt)}`,`적립 기간 종료: ${fmtT(c.answeredAt+300)} (획득 후 0.3초)`,`점수 지급 시각: ${fmtT(c.answeredAt+500)} (정기 처리 주기)`,'판정: 지급 시점 기준 적립 기간 종료 → 소멸'],
+ded:[it('적립 기간 종료 → 정답 점수 소멸',-1)],judge:['정답은 적립 기간 안에 맞히셨습니다.','다만 점수가 지급된 시점에는 적립 기간이 끝나 있었습니다.']})},
+{n:24,s:'C',t:'정답 등급 미달',target:'「프리미엄 정답 전용」으로 지정된 문항',cond:'정답 등급이 프리미엄 요건을 모두 충족하지 못한 경우',
+fn:c=>({cl:'제24조 2항',rec:['적립 가능 등급: 프리미엄 정답','프리미엄 요건: ① 정답 ② 선택 전 보기 3개 이상 살펴봄 ③ 「정답이다」라고 소리 내어 말함','확인된 요건: ① (②·③은 확인 수단 없음 → 미충족 처리)','판정 등급: 일반 정답'],
+ded:[it('등급 미달 → 정답 점수 적립 제외',-1)],judge:['정답률은 그대로 인정됩니다.','다만 이번 문항은 프리미엄 정답만 적립됩니다.']})},
+{n:25,s:'C',t:'점수 지급 최소 기준',target:'점수 지급을 신청하는 모든 문항',cond:'문항당 정답 점수가 최소 지급 기준(2점)에 미달하는 경우 (장려금 합산 불가)',
+fn:c=>({cl:'제25조 1항',rec:['지급 신청 최소 기준: 문항당 정답 점수 2점','본 문항 정답 점수: 1점','장려금 합산 여부: 합산 규정 없음 (합산 불가)'],
+ded:[it('최소 지급 기준 미달',-1)],judge:['최소 지급 기준에 미달하셨습니다.','장려금과 합치면 2점이라고요? 합산 규정은 없습니다.']})},
+{n:26,s:'C',t:'점수 묶음 지급',target:'묶음 단위로 교환되는 정답 점수',cond:'정답 점수가 3점 묶음을 충족하지 못한 채 구간이 종료된 경우',
+fn:c=>({cl:'제26조 1항',rec:['교환 단위: 정답 점수 3점 묶음','묶음 대기 정답 점수: 1점 (본 문항)','이전 정답 점수: 각 규정에 따라 처리 완료 → 묶음 편입 불가','구간 종료 시 미충족 묶음: 소멸'],
+ded:[it('묶음 미충족 → 정답 점수 소멸',-1)],judge:['3점이 모이면 바로 교환해 드립니다.','1점으로는 묶음을 만들 수 없습니다.']})},
+{n:27,s:'C',t:'중복 정답 유형 제한',target:'같은 유형의 문제로 얻는 정답 점수',cond:'1항: 동일 유형(덧셈) 정답 점수 상한 3점 소진 / 3항: 유형 이력 불충분',
+fn:c=>{const cnt=c.hist.filter(h=>h.correct&&Q[h.n-1].y==='add').length;const rec=['본 문항 유형: 덧셈',`덧셈 유형 기존 정답: ${cnt}개`,'덧셈 유형 정답 점수 상한: 3점 (기존 정답 1개 = 상한 1점 사용으로 산정)'];
+if(cnt>=3) return {cl:'제27조 1항',rec:rec.concat([`잔여 상한: 0점 (${cnt}개 × 1점 사용 → 상한 소진)`]),ded:[it('유형 상한 초과 → 정답 점수 미인정',-1)],judge:['덧셈은 이미 충분히 잘하신다는 게 증명되었습니다.','같은 유형으로는 더 이상 점수를 드릴 수 없습니다.']};
+return {cl:'제27조 3항',rec:rec.concat(['3항: 유형 이력이 3개 미만이면 「유형 판별 보류」 → 정답 점수 소멸형 보류']),ded:[it('유형 판별 보류 → 정답 점수 소멸',-1)],judge:['덧셈을 잘하시는지 아직 판단할 수 없습니다.','판단이 끝날 때까지 점수는 드릴 수 없습니다.']};}},
+{n:28,s:'C',t:'연속 정답 제한',target:'연속 정답으로 얻는 공식 점수',cond:'1항: 연속 정답 공식 점수 상한(5회분) 초과 / 2항: 연속 기록 단절 이력자 재검증',
+fn:c=>{const now=c.streak+1;
+if(c.streak>=5) return {cl:'제28조 1항',rec:[`현재 연속 정답: ${now}회째`,'연속 정답 공식 점수 상한: 5회분','상한 초과분: 적립 제외'],ded:[it('연속 정답 상한 초과분 적립 제외',-1)],judge:['연속으로 맞히고 계십니다. 훌륭합니다.','다만 연속 정답의 공식 점수에는 상한이 있습니다.']};
+return {cl:'제28조 2항',rec:[`현재 연속 정답: ${now}회째`,'2항: 연속 기록 단절 이력이 있는 참가자는 연속 정답 재검증 대상','재검증 수수료: 1점'],ded:[it('연속 정답 재검증 수수료',-1)],judge:['연속 기록이 한 번 끊기셨네요.','다시 연속인지 확인하는 데 비용이 듭니다.']};}},
+{n:29,s:'C',t:'정답 승인 순서 오류',target:'정답 확인·지급·승인 절차를 거친 점수',cond:'규정 처리 순서(확인 → 승인 → 지급)와 실제 처리 순서가 다른 경우',
+fn:c=>({cl:'제29조 1항',rec:['① 정답 확인 — 완료','② 점수 지급 — 완료','③ 최종 승인 — 완료','규정 처리 순서: ① → ③ → ②','실제 처리 순서: ① → ② → ③ (시스템 처리)'],
+ded:[it('절차 순서 오류 → 지급 취소',-1)],judge:['모든 절차는 완료되었습니다.','다만 순서가 틀렸습니다. 절차상의 문제로 지급이 취소되었습니다.']})},
+{n:30,s:'C',t:'정답 점수 만료',target:'유효기간이 부여된 정답 점수',cond:'최종 집계 시점에 정답 점수의 유효기간이 경과한 경우',
+fn:c=>({cl:'제30조 1항',rec:[`정답 점수 지급: ${fmtT(c.answeredAt)}`,'부여 유효기간: 0.5초',`유효기간 만료: ${fmtT(c.answeredAt+500)}`,`최종 집계: ${fmtT(c.answeredAt+1200)} → 만료 점수 회수`],
+ded:[it('유효기간 만료 → 정답 점수 회수',-1)],judge:['점수는 분명히 지급되었습니다.','집계할 때 이미 만료되어 회수했습니다.']})},
+
+/* ---------- D. 채점 기준의 함정 ---------- */
+{n:31,s:'D',t:'부분 점수 규정',target:'부분 점수 문항으로 지정된 문항',cond:'정답 배점이 0.5점으로 지정되어 정수 처리가 필요한 경우',
+fn:c=>({cl:'제31조 1항',base:0.5,rec:['본 문항 정답 배점: 0.5점 (부분 점수 문항)','장려금: 1점','합계 1.5점 → 정수 처리 → 1점','버림 처리: 0.5점'],
+ded:[it('정수 처리 (소수점 이하 버림)',-0.5)],judge:['정수 점수만 인정됩니다.','정답으로 받으신 0.5점은 규정에 따라 버렸습니다.']})},
+{n:32,s:'D',t:'조건부 정답',target:'검토 시간 조건이 부여된 문항',cond:'1항: 검토 시간 2초 미만 / 2항: 「검토」는 선택 이후의 재확인만 산입',
+fn:c=>{if(c.elapsed<2000) return {cl:'제32조 1항',rec:[`선택까지 소요 시간: ${sec(c.elapsed)}`,'정답 점수 지급 조건: 2.00초 이상 검토','판정: 검토 시간 미달'],ded:[it('조건 미충족 → 정답 점수 미지급',-1)],judge:['정답 자체는 맞습니다.','충분히 검토하지 않은 정답에는 점수를 드리지 않습니다.']};
+return {cl:'제32조 2항',rec:[`선택까지 소요 시간: ${sec(c.elapsed)}`,'2항: 「검토」란 정답 선택 이후 답안을 다시 살펴보는 행위를 말함','선택 후 검토 시간: 0.00초 (선택 즉시 채점)','판정: 검토 시간 미달'],ded:[it('조건 미충족 → 정답 점수 미지급',-1)],judge:['오래 고민하신 건 압니다.','그건 고민이고, 검토는 선택한 다음에 하는 겁니다.']};}},
+{n:33,s:'D',t:'문제 취소 규정',target:'출제 오류가 확인된 문항의 전 참가자',cond:'정답 판정 후 출제 오류 정정 절차가 개시되어 문항이 취소된 경우',
+fn:c=>({cl:'제33조 1항',rec:['출제 오류 정정 절차: 개시','정정 사유: 보기 ③ 「9」의 자간이 출제 규격(0.00em)과 0.01em 상이','처리: 제33문 취소 / 전 참가자 해당 문항 점수 무효 (장려금 포함)','해당 참가자 수: 1명'],
+ded:[it('문항 취소 → 정답 점수 무효',-1),it('문항 취소 → 연계 장려금 무효',-1)],judge:['출제 측의 실수를 인정합니다.','공정한 처리를 위해 전원 무효 처리합니다.','전원이라고 해 봐야 고객님 한 분입니다.']})},
+{n:34,s:'D',t:'정답 선택 방식 제한',target:'제출 방식이 지정된 문항',cond:'1항: 마우스 제출 / 2항: 키보드 제출(자동화 검증) / 3항: 모바일 터치 제출(간접 제출)',
+fn:c=>{if(c.input==='keyboard') return {cl:'제34조 2항',rec:['본 문항 공식 제출 방식: 키보드','입력 방식: 키보드 (일치)','2항: 키보드 제출 답안은 자동화(매크로) 여부 검증 대상 → 검증 수수료 1점'],ded:[it('자동화 여부 검증 수수료',-1)],judge:['키보드로 제출하셨군요. 맞는 방식입니다.','다만 키보드 입력은 매크로일 수도 있어서 검증했습니다.']};
+if(c.input==='touch') return {cl:'제34조 3항',rec:['본 문항 공식 제출 방식: 키보드 (모바일 기기는 터치 제출 허용)','입력 방식: 터치','3항: 터치 제출은 「간접 제출」로 분류, 간접 제출 답안의 정답 점수는 미지급'],ded:[it('간접 제출 → 정답 점수 미지급',-1)],judge:['모바일에서도 참여하실 수 있도록 터치 제출을 허용해 드렸습니다.','허용은 했지만, 점수 지급 대상은 아닙니다.']};
+return {cl:'제34조 1항',rec:['본 문항 공식 제출 방식: 키보드','입력 방식: 마우스','판정: 비공식 제출 방식'],ded:[it('비공식 제출 방식 → 정답 점수 미인정',-1)],judge:['본 문항은 키보드 제출만 인정합니다.','안내가 없었다고요? 규정집 제34조에 있습니다.']};}},
+{n:35,s:'D',t:'점수 중복 지급 방지',target:'같은 문항에서 동일 금액이 2건 이상 지급된 경우',cond:'동일 문항 · 동일 참가자 · 동일 금액(1점) 지급이 2건 발생한 경우',
+fn:c=>({cl:'제35조 1항',rec:['지급 내역 ①: 정답 점수 1점','지급 내역 ②: 장려금 1점','중복 판정 기준: 「동일 문항 · 동일 참가자 · 동일 금액」','판정: ①을 ②의 중복 지급으로 분류 → ① 회수'],
+ded:[it('중복 지급 판정 → 정답 점수 회수',-1)],judge:['시스템의 중복 방지 정책이 정상 작동했습니다.','금액이 같으면 같은 지급으로 봅니다.']})},
+{n:36,s:'D',t:'사전 등록 답안 기준',target:'사전 등록 답안 기준이 적용되는 문항',cond:'제출 답안이 사전 등록된 보기와 일치하지 않는 경우',
+fn:c=>({cl:'제36조 1항',rec:['사전 등록 답안: 없음',`사전 등록 기간: 제${c.n}문 출력 0.00초 전 ~ 0.00초 전`,`제출 답안: ②「${ansText(c.n)}」 → 미등록 보기`],
+ded:[it('미등록 답안 → 정답 점수 불인정',-1),it('미등록 답안 → 장려금 지급 제외',-1)],judge:['미등록 정답은 인정할 수 없습니다.','등록 기간은 분명히 있었습니다. 길이가 0초였을 뿐입니다.']})},
+{n:37,s:'D',t:'점수 우선순위 규정',target:'정답 점수와 참가 보너스가 동시에 발생한 경우',cond:'정답 점수와 장려금이 동시에 발생하여 둘 중 하나만 지급해야 하는 경우',
+fn:c=>({cl:'제37조 1항',rec:['동시 발생: 정답 점수 1점 · 장려금 1점','지급 원칙: 둘 중 하나만 지급','우선순위: 소액 우선 → 동액이면 「먼저 지급된 항목」 우선','선지급 항목: 장려금 (구제 제도 공고 시점 선지급 간주)'],
+ded:[it('우선순위 규정 → 정답 점수 차감',-1)],judge:['이미 장려금을 받으셨습니다.','둘 다 드리면 이중 혜택입니다.']})},
+{n:38,s:'D',t:'정답 처리 순서 규정',target:'공식 처리 대기열에 등록된 답안',cond:'공식 처리 순서가 지급 기한 이후로 배정된 경우',
+fn:c=>({cl:'제38조 1항',rec:[`제출 순서: 제${c.n}문 → 1번째 제출`,`공식 처리 순서: 제${c.n}문 → 대기열 51번째 (전 문항 처리 후)`,`지급 기한: 제${c.n}문 종료 시점`,'처리 예정: 제50문 종료 이후 → 지급 기한 초과'],
+ded:[it('지급 기한 초과 (처리 순서)',-1)],judge:['제출은 빨리 하셨습니다.','중요한 건 제출 순서가 아니라 처리 순서입니다.']})},
+{n:39,s:'D',t:'소급 적용 규정',target:'개정 규정의 적용일 이후 발생한 모든 점수',cond:'규정 개정 후, 적용일이 소급 지정되어 이미 지급된 점수를 재계산하는 경우',
+fn:c=>({cl:'제39조 1항',rec:['정답 점수 1점: 지급 완료',`규정 개정 공포: ${fmtD(c.now)} ${fmtT(c.now)}`,`시행(적용)일: ${fmtD(c.shownAt-3000)} ${fmtT(c.shownAt-3000)} (공포 이전으로 소급)`,`정답 시각: ${fmtT(c.answeredAt)} → 시행 이후 → 개정 규정 적용`,`개정 내용: 제${c.n}문 정답 배점 1점 → 0점`],
+ded:[it('소급 재계산 → 기지급 정답 점수 회수',-1)],judge:['새 규정이지만 이전 점수에도 적용됩니다.','적용일을 보시면 고객님이 정답을 맞히시기 전입니다.']})},
+{n:40,s:'D',t:'상품 응모용 점수 분리',target:'국가 상징 관련 문항의 점수',cond:'획득 점수가 「일반 점수(응모 불가)」로 분류된 경우',
+fn:c=>({cl:'제40조 1항',rec:['본 문항 점수 분류: 일반 점수 (응모 불가)','분류 근거: 태극기 관련 문항은 「국가 상징 문항」 — 상업적 경품 응모에 사용 불가','일반 점수: 총점 포함 / 응모 점수: 미포함'],
+ded:[it('정답 점수 → 일반 점수로 분류',-1,{g:1}),it('장려금 → 일반 점수로 분류',-1,{g:1})],judge:['점수는 그대로 있습니다.','총점에는 포함되지만 카드지갑 응모 점수에는 포함되지 않습니다.']})},
+
+/* ---------- E. 마지막 단계의 특별 규정 ---------- */
+{n:41,s:'E',t:'고득점자 관리 수수료',target:'응모 점수 25점 이상 참가자',cond:'1항: 응모 점수 25점 이상 → 관리 대상자 자동 분류 / 3항: 미만 시 사전 심사',
+fn:c=>{if(c.before>=25) return {cl:'제41조 1항',rec:[`현재 응모 점수: ${fmtN(c.before)}점 (기준 25점 이상)`,'관리 대상자 자동 분류: 완료','관리 대상자 정답 획득 시 관리비 1점 부과'],ded:[it('고득점자 관리 수수료',-1)],judge:['축하드립니다. 관리 대상자가 되셨습니다.','관리에는 비용이 듭니다.']};
+return {cl:'제41조 3항',rec:[`현재 응모 점수: ${fmtN(c.before)}점`,'관리 대상 사전 심사: 실시 (25점 도달 가능성 검토)','사전 심사 수수료: 1점'],ded:[it('관리 대상 사전 심사 수수료',-1)],judge:['아직 관리 대상은 아니십니다.','되실 수도 있으니 미리 심사했습니다.']};}},
+{n:42,s:'E',t:'상품 근접 보정',target:'상품 획득 조건에 근접한 참가자',cond:'1항: 응모 점수 26점 이상 → 공정성 보정 / 2항: 근접 예상 참가자 사전 보정',
+fn:c=>{if(c.before>=26) return {cl:'제42조 1항',rec:[`현재 응모 점수: ${fmtN(c.before)}점 → 상품 기준(30점) 근접`,'공정성 보정: 정답 1건당 −1점'],ded:[it('상품 근접 공정성 보정',-1)],judge:['지나친 고득점 집중을 예방하기 위한 조치입니다.','모두에게 공정해야 하니까요.']};
+return {cl:'제42조 2항',rec:[`현재 응모 점수: ${fmtN(c.before)}점`,'2항: 잔여 문항으로 근접 가능한 참가자는 사전 보정 대상','사전 보정: −1점'],ded:[it('근접 예상 사전 보정',-1)],judge:['근접하실 예정이라 미리 보정해 드렸습니다.','미리 하면 나중에 덜 놀라십니다.']};}},
+{n:43,s:'E',t:'응모 자격 유지비',target:'상품 응모 자격 활성 참가자',cond:'1항: 응모 점수 27점 도달 → 자격 활성화 및 유지비 / 3항: 응모 단계부터 장려금 대체',
+fn:c=>{if(c.before>=27) return {cl:'제43조 1항',notice:'cheer',rec:[`응모 점수 ${fmtN(c.before)}점 도달 → 상품 응모 자격 활성화`,'자격 유지비: 1점 (추가 적립분에서 차감)','3항: 응모 단계(제44문~)부터 장려금은 「응원 메시지」로 대체 지급'],ded:[it('응모 자격 유지비',-1)],judge:['드디어 응모 자격이 생기셨습니다.','자격을 유지하려면 유지비가 필요합니다.','이제부터는 장려금 대신 진심 어린 응원을 드리겠습니다.']};
+return {cl:'제43조 2항',notice:'cheer',rec:[`현재 응모 점수: ${fmtN(c.before)}점 (자격 기준 27점 미만)`,'2항: 응모 자격 예비 심사 수수료 1점','3항: 응모 단계(제44문~)부터 장려금은 「응원 메시지」로 대체 지급'],ded:[it('응모 자격 예비 심사 수수료',-1)],judge:['아직 자격은 없으시지만 예비 심사는 해 드렸습니다.','이제부터는 장려금 대신 진심 어린 응원을 드리겠습니다.']};}},
+{n:44,s:'E',t:'특별 정답 검증',target:'응모 점수 28점 이상 참가자의 정답',cond:'1항: 28점 이상 → 자동 심사(적격성 검사) / 2항: 미만 시 예비 자동 심사',
+fn:c=>{if(c.before>=28) return {cl:'제44조 1항',rec:['자동 심사 대상: 응모 점수 28점 이상 참가자','1단계 수학적 정답 검증: 적합','2단계 적격성 검사: 부적합','부적합 사유: 고득점자 적격성 기준은 공정성 확보를 위해 비공개'],ded:[it('적격성 검사 → 지급 조건 미충족',-1)],judge:['수학적으로는 완벽한 정답입니다.','다만 적격성 검사를 통과하지 못하셨습니다.','기준이 뭐냐고요? 공개하면 공정하지 않습니다.']};
+return {cl:'제44조 2항',rec:[`현재 응모 점수: ${fmtN(c.before)}점`,'예비 자동 심사: 실시','적격성 예비 판정: 보류 → 지급 조건 미충족'],ded:[it('예비 자동 심사 → 지급 조건 미충족',-1)],judge:['고득점자가 되실 경우를 대비해 미리 심사했습니다.','결과는 미충족입니다.']};}},
+{n:45,s:'E',t:'상품 신청 전환비',target:'상품 신청용 점수로 전환되는 정답 점수',cond:'정답 점수가 상품 신청용 점수로 자동 전환되는 경우',
+fn:c=>({cl:'제45조 1항',rec:[`정답 반영 시 응모 점수: ${fmtN(c.before+1)}점`,'상품 신청용 점수 전환: 자동 실행','전환비: 1점'],
+ded:[it('상품 신청 전환비',-1)],judge:[c.before+1>=29?`${fmtN(c.before+1)}점 도달을 축하드립니다.`:'점수 전환이 완료되었습니다.','상품 신청용 점수로 전환하는 데 1점이 들었습니다.']})},
+{n:46,s:'E',t:'응모 제한 규정',target:'상품 지급 직전 최근 획득 점수',cond:'상품 지급 직전 승인 심사에서 최근 획득 점수가 임시 점수로 전환된 경우',
+fn:c=>({cl:'제46조 1항',rec:['상품 지급 직전 승인 심사: 개시',`심사 대상: 최근 획득 점수 (제${c.n}문 정답 점수 1점)`,'심사 결과: 임시 점수로 전환 → 공식 점수 제외','임시 점수 확정 심사: 상품 지급 이후 진행'],
+ded:[it('최근 획득 점수 → 임시 점수 전환',-1,{h:1})],judge:['최근 점수는 아직 검증 중입니다.','검증은 상품 지급이 끝난 다음에 하겠습니다.']})},
+{n:47,s:'E',t:'점수 확정 수수료',target:'화면 표시 점수를 확정 점수로 전환하는 경우',cond:'표시 점수가 확정 점수로 전환될 때 확정 수수료가 발생한 경우',
+fn:c=>({cl:'제47조 1항',rec:[`표시 점수: ${fmtN(c.before+1)}점`,`확정 점수: 표시 점수 − 확정 수수료 1점 = ${fmtN(c.before)}점`],
+ded:[it('점수 확정 수수료',-1)],judge:['화면에 보이는 점수와 확정 점수는 다릅니다.','확정에는 수수료가 듭니다.']})},
+{n:48,s:'E',t:'경품 응모 보증금',target:'상품 신청 단계 참가자',cond:'정답 반영 후 상품 신청 보증금이 자동 예치되는 경우',
+fn:c=>({cl:'제48조 1항',rec:[`정답 반영 점수: ${fmtN(c.before+1)}점`,'상품 신청 보증금: 1점 자동 예치','보증금 반환 시점: 상품 수령 후 30일'],
+ded:[it('상품 신청 보증금 자동 예치',-1,{h:1})],judge:[`${fmtN(c.before+1)}점 획득을 축하드립니다.`,'상품 신청에 필요한 보증금이 정상적으로 예치되었습니다.','반환은 상품을 받으신 뒤에 해 드립니다.']})},
+{n:49,s:'E',t:'승인권한 분리 규정',target:'상품 신청용 점수 인정',cond:'채점 담당자와 상품 담당자 2인의 승인 중 하나라도 기한 내 완료되지 않은 경우',
+fn:c=>({cl:'제49조 1항',rec:['수학적 정답 확인: 완료','상품 신청용 점수 인정 요건: 이중 승인 (채점 담당자 + 상품 담당자)','채점 담당자: 승인','상품 담당자: 승인 기한 초과 (부재)'],
+ded:[it('승인 절차 미완료',-1)],judge:['정답 여부에는 이견이 없습니다.','다만 공식 승인 절차가 완료되지 않았습니다.']})},
+{n:50,s:'E',t:'최종 문제 특별 배점과 정산',target:'특별 배점(2점) 최종 문항',cond:'특별 배점 문항은 일반 문항과 다른 정산 규정(정산 수수료·응모 확정 수수료)을 적용',
+fn:c=>({cl:'제50조 2항·3항',verdict:'정답 / 마뗑킴 카드지갑 획득 실패',rec:['특별 배점 문항: 2점 (일반 문항과 다른 정산 규정 적용)','제50조 2항: 특별 배점 정산 수수료 1점','제50조 3항: 상품 응모 확정 수수료 1점','특별 배점 문항은 장려금·응원 메시지 지급 대상 아님'],
+ded:[it('특별 배점 정산 수수료',-1),it('상품 응모 확정 수수료',-1)],judge:['마지막 문제를 정확히 맞히셨습니다.','다만 이번 문제는 2점짜리 특별 문제이므로 일반 문제와 다른 정산 규정이 적용됩니다.','규정에 따라 2점이 차감되었습니다.',`따라서 최종 점수는 ${fmtN(c.before)}점입니다.`]})}
+];
+
+/* 이의신청 규정 */
+const APPEAL_RULES=[
+{no:'제A-1조',t:'이의신청 수수료',d:'이의신청을 접수하려면 신청 수수료 1점을 납부해야 한다. 납부가 불가능한 경우 신청할 수 없다.'},
+{no:'제A-2조',t:'신청 포기',d:'수수료 안내 후 신청을 포기한 경우 해당 판정을 수락한 것으로 간주한다.'},
+{no:'제A-4조',t:'이의신청 기한',d:'이의신청은 판정 이전까지 가능하다. 정답 판정은 정답 제출 이후 발생하므로, 신청 기한은 정답 제출 이전에 종료된다.'},
+{no:'제A-5조',t:'수수료 반환',d:'반려된 이의신청의 수수료는 반환하지 않는다.'},
+{no:'제A-6조',t:'신청 대상',d:'이의신청은 1차 심사(수학적 정답 판정) 결과에 대해서만 가능하다. 규정 적용은 2차 심사이므로 대상이 아니다.'},
+{no:'제A-9조',t:'첨부 서식',d:'이의신청서에는 서식 OBJ-7(이의신청 사유서)을 첨부해야 한다. 서식 OBJ-7은 이의신청이 승인된 후 발급된다.'},
+{no:'제A-12조',t:'심사위원회 정족수',d:'이의신청 심사위원회는 재적 위원 과반수 출석으로 개의한다. 재적 위원은 1명이며, 과반수는 1명을 초과하는 인원을 말한다.'},
+{no:'제A-15조',t:'상습 신청 관리',d:'이의신청이 누적된 참가자는 상담 대기열로 이관된다. 상담은 대기 순번에 따라 진행된다.'}
+];
+
+/* =========================================================
+   채점 엔진 (순수 함수)
+   ========================================================= */
+function compute(ctx){
+  const n=ctx.n, rule=RULES[n-1], o=rule.fn(ctx);
+  const items=baseItems(n,o.base).concat(o.ded||[]);
+  let v=ctx.before,h=0,g=0,dsum=0;
+  for(const x of items){v=r1(v+x.d);h+=x.h||0;g+=x.g||0;if(x.d<0&&!x.h&&!x.g)dsum+=-x.d;}
+  if(n<50&&v>OFFICIAL_CAP){const d=r1(OFFICIAL_CAP-v);items.push(it('제0조 총칙: 응모 점수 상한 관리',d));v=OFFICIAL_CAP;dsum+=-d;}
+  if(v<0){const d=-v;items.push(it('제0조 총칙: 음수 점수 방지 보정',d));v=0;}
+  const net=r1(v-ctx.before);
+  let verdict=o.verdict||`정답 / 실수령 ${fmtN(net)}점`;
+  if(!o.verdict){if(h)verdict+=` · 보류 ${h}점`;if(g)verdict+=` · 일반 점수 ${g}점`;}
+  return {n,correct:true,chosen:ctx.chosen,cl:o.cl,rec:o.rec,items,judge:o.judge,verdict,before:ctx.before,after:v,net,h,g,dsum:r1(dsum),notice:o.notice||null,input:ctx.input,elapsed:Math.round(ctx.elapsed||0)};
+}
+function wrongResult(ctx){
+  return {n:ctx.n,correct:false,chosen:ctx.chosen,before:ctx.before,after:ctx.before,net:0,h:0,g:0,dsum:0,items:[],
+    verdict:'오답 / 0점',judge:['오답입니다.','이 판정에는 어떤 규정도 필요하지 않았습니다.'],rec:[`선택한 답: ${'①②③④'[ctx.chosen]} ${Q[ctx.n-1].o[ctx.chosen]}`,`정답: ${'①②③④'[Q[ctx.n-1].a]} ${ansText(ctx.n)}`]};
+}
+function fresh(){return {q:0,official:0,held:0,general:0,correct:0,wrong:0,streak:0,ded:0,hist:[],appeals:0,appealFees:0,notices:{},finished:false,fast:false};}
+function commit(S,res){
+  S.official=res.after;S.held+=res.h;S.general+=res.g;S.ded=r1(S.ded+res.dsum);
+  if(res.correct){S.correct++;S.streak++;}else{S.wrong++;S.streak=0;}
+  S.hist.push(res);S.q++;
+}
+
+/* =========================================================
+   UI
+   ========================================================= */
+const IS_BROWSER=typeof document!=='undefined';
+let S=fresh(), busy=false, shownPerf=0, shownAt=0, lastPtr='mouse', curRes=null, nextReady=false;
+const $=s=>document.querySelector(s);
+const wait=ms=>new Promise(r=>setTimeout(r,S.fast?ms*.3:ms));
+const realWait=ms=>new Promise(r=>setTimeout(r,ms));
+function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(S))}catch(e){}}
+function load(){try{const r=localStorage.getItem(SAVE_KEY);return r?JSON.parse(r):null}catch(e){return null}}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));window.scrollTo(0,0);}
+function esc(s){return String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+
+function hud(val,flash){
+  const v=val==null?S.official:val;
+  const el=$('#hudScore');el.innerHTML=`${fmtN(v)}<small> / ${TARGET}</small>`;
+  if(flash){el.classList.remove('up','down');void el.offsetWidth;el.classList.add(flash);setTimeout(()=>el.classList.remove(flash),380);}
+  $('#hudFill').style.width=Math.min(100,v/TARGET*100)+'%';
+  $('#hudBar').classList.toggle('goal',v>=25);
+  $('#mCorrect').textContent=S.correct;$('#mHeld').textContent=fmtN(S.held);$('#mGeneral').textContent=fmtN(S.general);$('#mDed').textContent=fmtN(S.ded);
+  $('#btnFast').classList.toggle('on',!!S.fast);
+}
+
+/* ---------- 시작 ---------- */
+function boot(){
+  const sv=load();
+  if(sv&&sv.q>0&&!sv.finished){$('#btnResume').classList.remove('hidden');const ri=$('#resumeInfo');ri.classList.remove('hidden');ri.textContent=`저장된 진행: 제${sv.q}문 완료 · 응모 점수 ${fmtN(sv.official)}점`;}
+  $('#btnStart').onclick=()=>{S=fresh();save();startGame();};
+  $('#btnResume').onclick=()=>{S=Object.assign(fresh(),load());startGame();};
+  $('#btnRulebookStart').onclick=()=>openRulebook();
+  $('#btnRulebook').onclick=()=>openRulebook(S.hist.length?S.hist[S.hist.length-1].n:null);
+  $('#btnFast').onclick=()=>{S.fast=!S.fast;save();hud(null);};
+  $('#btnHome').onclick=openMenu;
+  document.addEventListener('keydown',onKey);
+}
+function startGame(){show('game');hud(null);if(S.q>=50){endScreen();return;}gotoQuestion();}
+function onKey(e){
+  if(!$('#game').classList.contains('on')||document.querySelector('.modal')||document.querySelector('.celebrate'))return;
+  if(['1','2','3','4'].includes(e.key)&&!busy){e.preventDefault();pick(+e.key-1,null);}
+  else if(e.key==='Enter'&&nextReady){e.preventDefault();goNext();}
+}
+async function gotoQuestion(){
+  if(S.q===10&&!S.notices.relief){S.notices.relief=1;save();await noticeModal('📢 [공고] 참가자 구제 제도 시행',
+    `<p>제1~10문을 모두 풀었음에도 실수령 점수가 <b>${fmtN(S.official)}점</b>인 참가자가 다수(1명) 확인되었습니다.</p><p class="mt8">공정채점위원회는 참가자 보호를 위해 <b>제11문부터 정답 시 「성실 참여 장려금」 1점을 추가 지급</b>합니다.</p><p class="mt8" style="color:var(--sub);font-size:12.5px">※ 장려금에도 각종 규정이 동일하게 적용될 수 있습니다.<br>— 공정채점위원회 위원장</p>`,'희망을 갖고 계속하기');}
+  if(S.q===43&&!S.notices.cheer){S.notices.cheer=1;save();await noticeModal('💌 [공고] 장려금 제도 종료 및 응원 메시지 제도 시행',
+    `<p>제43조 3항에 따라 응모 단계(제44문~)부터 장려금은 <b>「응원 메시지」</b>로 대체 지급됩니다.</p><p class="mt8">응원 메시지는 점수로 환산되지 않으나, 마음으로 환산됩니다.</p><p class="mt8" style="color:var(--sub);font-size:12.5px">— 공정채점위원회 고객감동팀</p>`,'마음으로 받기');}
+  if(S.q===40&&!S.notices.final){S.notices.final=1;save();await noticeModal('🏁 최종 단계 진입 안내',
+    `<p>현재 응모 점수 <b>${fmtN(S.official)}점</b>. 남은 문항은 10문제입니다.</p><p class="mt8">최종 단계에서는 상품 지급의 공정성을 위해 <b>「E. 마지막 단계의 특별 규정」</b>이 적용됩니다. 규정집에서 미리 확인하실 수 있습니다.</p>`,'끝까지 도전하기');}
+  renderQuestion();
+}
+function renderQuestion(){
+  const n=S.q+1,q=Q[S.q];
+  $('#qno').textContent=`제 ${n} 문 / 50`;$('#qcat').textContent=q.c;$('#qtext').textContent=q.t;
+  $('#qpts').textContent=n===50?'⭐ 배점 2점 (특별 문항)':'배점 1점';
+  $('#qprog').style.width=(n/50*100)+'%';
+  const box=$('#opts');box.innerHTML='';
+  q.o.forEach((o,i)=>{const b=document.createElement('button');b.className='opt';b.innerHTML=`<span class="k">${'①②③④'[i]}</span><span>${esc(o)}</span>`;
+    b.addEventListener('pointerdown',e=>{lastPtr=e.pointerType||'mouse'});b.addEventListener('click',e=>pick(i,e));box.appendChild(b);});
+  const jp=$('#jp');jp.innerHTML='';jp.classList.add('hidden');
+  const qc=$('#qcard');qc.style.animation='none';void qc.offsetWidth;qc.style.animation='';
+  busy=false;nextReady=false;curRes=null;hud(null);window.scrollTo({top:0,behavior:'smooth'});
+  shownPerf=performance.now();shownAt=Date.now();
+}
+
+/* ---------- 답 선택 ---------- */
+async function pick(i,e){
+  if(busy)return;busy=true;
+  const n=S.q+1,q=Q[S.q];const elapsed=performance.now()-shownPerf;
+  let input='keyboard',cx=null,cy=null;
+  if(e&&e.type==='click'){
+    if(e.detail===0)input='keyboard';
+    else{input=(lastPtr==='touch'||lastPtr==='pen')?'touch':'mouse';const r=e.currentTarget.getBoundingClientRect();cx=(e.clientX-r.left)/r.width;cy=(e.clientY-r.top)/r.height;}
+  }
+  const btns=[...document.querySelectorAll('.opt')];btns.forEach(b=>b.disabled=true);
+  const ctx={n,before:S.official,streak:S.streak,hist:S.hist,elapsed,input,cx,cy,shownAt,answeredAt:Date.now(),now:Date.now(),chosen:i};
+  const correct=i===q.a;
+  btns.forEach((b,k)=>{if(k===q.a)b.classList.add('ok');else if(k===i)b.classList.add('no');else b.classList.add('dim');});
+  const jp=$('#jp');jp.classList.remove('hidden');
+  if(!correct){
+    const res=wrongResult(ctx);commit(S,res);save();$('#qcard').classList.add('shake');setTimeout(()=>$('#qcard').classList.remove('shake'),450);
+    await revealWrong(res);return;
+  }
+  await preflow(n,ctx,jp);
+  ctx.now=Date.now();
+  const res=compute(ctx);commit(S,res);save();curRes=res;
+  if(n===50){await reveal50(res);return;}
+  await reveal(res);
+}
+
+/* ---------- 규정별 사전 연출 ---------- */
+async function preflow(n,ctx,jp){
+  jp.scrollIntoView({behavior:'smooth',block:'nearest'});
+  if(n===16){
+    jp.innerHTML=`<div class="pf"><div class="pf-t">제출 확인이 필요합니다</div><div class="pf-s">제16조에 따라 정답 선택 후 확인 버튼을 눌러야 신청이 완료됩니다.</div><button class="btn primary" id="cf" style="max-width:260px;margin:0 auto">제출 확인</button><div class="pf-timer">확인 버튼 유효기간 <b id="cft">0.60</b>초 남음</div></div>`;
+    await new Promise(res=>{const t0=performance.now();let done=false;const b=$('#cf');
+      const tick=()=>{if(done)return;const left=Math.max(0,600-(performance.now()-t0));$('#cft').textContent=(left/1000).toFixed(2);
+        if(left<=0){done=true;b.disabled=true;b.textContent='유효기간 만료';ctx.confirmInTime=false;setTimeout(res,900);}else requestAnimationFrame(tick);};
+      b.onclick=()=>{if(done)return;done=true;ctx.confirmInTime=true;ctx.confirmMs=performance.now()-t0;b.disabled=true;b.textContent='확인 처리 중… (1.00초)';setTimeout(res,1000);};tick();});
+    return;
+  }
+  if(n===17){
+    jp.innerHTML=`<div class="pf"><div class="pf-t">정답을 한 번 더 확인해 주시겠어요?</div><div class="pf-s">실수 방지를 위해 선택하신 답을 확인해 주세요.</div><button class="btn primary" id="rc" style="max-width:260px;margin:0 auto">네, 이 답이 맞습니다</button><div class="pf-timer" style="color:var(--sub)">미확인 시 <b id="rct">4</b>초 후 자동 진행</div></div>`;
+    await new Promise(res=>{let done=false;let s=4;const iv=setInterval(()=>{s--;const el=$('#rct');if(el)el.textContent=s;if(s<=0&&!done){done=true;clearInterval(iv);ctx.reconfirm=false;res();}},1000);
+      $('#rc').onclick=()=>{if(done)return;done=true;clearInterval(iv);ctx.reconfirm=true;$('#rc').disabled=true;$('#rc').textContent='확인되었습니다';setTimeout(res,500);};});
+    return;
+  }
+  if(n===19){
+    jp.innerHTML=`<div class="pf"><div class="pf-t">임시 승인 완료 ✓</div><div class="pf-s">최종 승인 담당 부서(정답승인과)에서 처리 중입니다…</div><div class="pbar"><i id="pb"></i></div><div style="font-size:13px;font-weight:700"><span id="pbt">0</span>% · 허용 대기 3.00초</div></div>`;
+    const seq=[12,31,55,78,92,97,99,99,99,99];for(const p of seq){$('#pb').style.width=p+'%';$('#pbt').textContent=p;await realWait(330);}
+    jp.querySelector('.pf-s').innerHTML='<b style="color:var(--red)">승인 대기 시간 초과</b>';await wait(700);return;
+  }
+  if(n===29){
+    jp.innerHTML=`<div class="pf"><div class="pf-t">처리 절차 진행</div><div class="steps" id="st"></div></div>`;const st=$('#st');
+    for(const s of ['① 정답 확인','② 점수 지급','③ 최종 승인']){st.insertAdjacentHTML('beforeend',`<div><span>${s}</span><span class="ok">완료</span></div>`);await wait(450);}
+    st.insertAdjacentHTML('beforeend',`<div><span>절차 순서 검증</span><span class="bad">순서 오류</span></div>`);await wait(800);return;
+  }
+  if(n===33){
+    jp.innerHTML=`<div class="pf"><div class="pf-t">정답 확인 ✓</div><div class="spin"></div></div>`;await wait(700);
+    jp.innerHTML=`<div class="notice"><div class="nt">⚠️ [긴급] 출제 오류 정정 절차 개시</div>제33문 보기 ③의 자간 오류(0.01em)가 확인되어 문항 취소 여부를 심의합니다.</div>`;await wait(1500);return;
+  }
+  if(n===49){
+    jp.innerHTML=`<div class="pf"><div class="pf-t">상품 신청용 점수 이중 승인</div><div class="steps" id="st"></div></div>`;const st=$('#st');
+    st.insertAdjacentHTML('beforeend',`<div><span>채점 담당자</span><span id="a1">⏳ 검토 중</span></div><div><span>상품 담당자</span><span id="a2">⏳ 검토 중</span></div>`);
+    await wait(900);$('#a1').outerHTML='<span class="ok">✓ 승인</span>';await wait(1300);$('#a2').textContent='⏳ 응답 없음…';await wait(1000);$('#a2').outerHTML='<span class="bad">✕ 기한 초과</span>';await wait(700);return;
+  }
+  if(n===50)return;
+  jp.innerHTML=`<div class="pf"><div class="pf-t">정답 확인 중…</div><div class="spin"></div><div class="pf-s" style="margin:4px 0 0">공정채점위원회 규정 검토</div></div>`;
+  await wait(650);
+}
+
+/* ---------- 판정 공개 ---------- */
+function rowHTML(x,cls){const c=x.d>0?'plus':x.d<0?'minus':'zero';let note='';if(x.h)note=`<small>→ 보류·예치 +${x.h}</small>`;if(x.g)note=`<small>→ 일반 점수 +${x.g}</small>`;
+  return `<div class="jrow ${cls||''}"><span class="l">${esc(x.l)}${note}</span><span class="v ${c}">${sgn(x.d)}</span></div>`;}
+async function typeLines(el,lines,speed=24){
+  for(const line of lines){const p=document.createElement('p');p.className='caret';el.appendChild(p);
+    for(let i=1;i<=line.length;i++){p.textContent=line.slice(0,i);if(i%2===0)await wait(speed);}p.classList.remove('caret');await wait(160);}
+}
+async function reveal(res){
+  const jp=$('#jp');const rule=RULES[res.n-1];
+  jp.innerHTML=`<div class="jh"><span class="dot"></span>[정답 확인 완료]</div><div class="jrows" id="jr"></div>`;
+  const jr=$('#jr');let val=res.before;
+  jr.insertAdjacentHTML('beforeend',`<div class="jrow"><span class="l">수학적 정답</span><span class="v plus">인정 ✓</span></div>`);await wait(380);
+  const nb=res.n===50?1:baseItems(res.n).length;
+  for(let i=0;i<res.items.length;i++){const x=res.items[i];
+    if(i===nb){jr.insertAdjacentHTML('beforeend',`<div class="jrow rule"><span class="l">적용 규정</span><span class="v">${esc(res.cl)} · ${esc(rule.t)}</span></div>`);await wait(520);}
+    jr.insertAdjacentHTML('beforeend',rowHTML(x));val=r1(val+x.d);hud(val,x.d>0?'up':x.d<0?'down':null);await wait(x.d<0?560:420);}
+  jr.insertAdjacentHTML('beforeend',`<div class="jrow total"><span class="l">최종 지급 점수</span><span class="v ${res.net>0?'plus':res.net<0?'minus':'zero'}">${sgn(res.net)}</span></div>`);
+  hud(res.after);await wait(300);
+  jp.insertAdjacentHTML('beforeend',`<div class="cur">&lt;현재 점수 ${fmtN(res.after)} / ${TARGET}&gt;</div><div class="judge"><div class="avatar">⚖</div><div class="bubble" id="jb"></div></div>`);
+  jp.scrollIntoView({behavior:'smooth',block:'nearest'});
+  await typeLines($('#jb'),res.judge);
+  jp.insertAdjacentHTML('beforeend',`<div class="verdict"><small>최종 판정</small>${esc(res.verdict)}</div><div class="stamp">규정 적용</div>`);
+  addActions(jp,res);
+}
+async function revealWrong(res){
+  const jp=$('#jp');
+  jp.innerHTML=`<div class="jh bad"><span class="dot"></span>[채점 결과]</div><div class="jrows"><div class="jrow"><span class="l">수학적 정답</span><span class="v minus">불인정 ✕</span></div><div class="jrow"><span class="l">정답</span><span class="v">${'①②③④'[Q[res.n-1].a]} ${esc(ansText(res.n))}</span></div><div class="jrow total"><span class="l">획득 점수</span><span class="v zero">±0</span></div></div><div class="cur">&lt;현재 점수 ${fmtN(res.after)} / ${TARGET}&gt;</div><div class="judge"><div class="avatar">⚖</div><div class="bubble" id="jb"></div></div>`;
+  jp.scrollIntoView({behavior:'smooth',block:'nearest'});
+  await typeLines($('#jb'),res.judge);
+  jp.insertAdjacentHTML('beforeend',`<div class="verdict"><small>최종 판정</small>${esc(res.verdict)}</div>`);
+  addActions(jp,res,true);
+}
+function addActions(jp,res,wrong){
+  const last=res.n===50;
+  jp.insertAdjacentHTML('beforeend',`<div class="acts">${wrong?'':`<button class="btn" id="aDetail">📄 상세 판정 근거</button><button class="btn red" id="aAppeal">✋ 이의신청</button>`}<button class="btn primary full" id="aNext">${last?'최종 결과 보기 →':'다음 문제 →'}</button></div>`);
+  if(!wrong){$('#aDetail').onclick=()=>openDetail(res);$('#aAppeal').onclick=()=>openAppeal(res);}
+  $('#aNext').onclick=goNext;nextReady=true;busy=true;
+  jp.scrollIntoView({behavior:'smooth',block:'end'});
+}
+function goNext(){if(!nextReady)return;nextReady=false;if(S.q>=50){S.finished=true;save();endScreen();}else gotoQuestion();}
+
+/* ---------- 마지막 문제 연출 ---------- */
+async function reveal50(res){
+  const b=res.before;
+  const ov=document.createElement('div');ov.className='celebrate';
+  ov.innerHTML=`<div class="cel-box" id="cb"><div class="cel-1">정답입니다!</div><div class="cel-2">+2점 획득!</div><div class="cel-score" id="cs">${fmtN(b)}<small>/30</small></div><div class="cel-3" id="c3"></div></div>`;
+  document.body.appendChild(ov);
+  await realWait(900);
+  for(const v of [b+1,b+2]){const cs=$('#cs');cs.innerHTML=`${fmtN(v)}<small>/30</small>`;cs.classList.add('pop');hud(v,'up');await realWait(260);cs.classList.remove('pop');await realWait(500);}
+  if(b+2>=TARGET){confetti();$('#c3').textContent='🎉 축하합니다! 마뗑킴 카드지갑 당첨! 🎉';}
+  else $('#c3').textContent=`응모 점수 ${fmtN(b+2)}점 달성!`;
+  await realWait(3000);
+  const cb=$('#cb');
+  cb.insertAdjacentHTML('beforeend',`<div class="settle mt24" id="settle"><h3>[최종 점수 정산 안내]</h3><table class="calc" id="ct"></table><div class="judge"><div class="avatar">⚖</div><div class="bubble" id="jb"></div></div></div>`);
+  $('#settle').scrollIntoView({behavior:'smooth',block:'start'});
+  const ct=$('#ct');
+  const rows=[['기존 공식 점수',fmtN(b),''],['마지막 문제 특별 배점','+2','plus'],['특별 배점 정산 수수료','−1','minus'],['상품 응모 확정 수수료','−1','minus']];
+  let v=b+2;
+  for(const [l,val,c] of rows){ct.insertAdjacentHTML('beforeend',`<tr><td>${l}</td><td class="${c}">${val}</td></tr>`);if(c==='minus'){v--;hud(v,'down');const cs=$('#cs');cs.innerHTML=`${fmtN(v)}<small>/30</small>`;}await realWait(650);}
+  ct.insertAdjacentHTML('beforeend',`<tr class="sum"><td>최종 인정 점수</td><td>${fmtN(res.after)}</td></tr>`);hud(res.after);await realWait(400);
+  await typeLines($('#jb'),res.judge,28);
+  $('#settle').insertAdjacentHTML('beforeend',`<div class="verdict">마뗑킴 카드지갑 획득 실패.</div><div class="stamp">정산 완료</div><div class="acts"><button class="btn" id="sD">📄 상세 판정 근거</button><button class="btn red" id="sA">✋ 이의신청</button><button class="btn primary full" id="sN">최종 결과 보기 →</button></div>`);
+  $('#sD').onclick=()=>openDetail(res);$('#sA').onclick=()=>openAppeal(res);
+  $('#sN').onclick=()=>{ov.remove();S.finished=true;save();endScreen();};
+  $('#sN').scrollIntoView({behavior:'smooth',block:'end'});
+}
+function confetti(){const cols=['#d9c39a','#fff','#c8102e','#b08d57','#f3e3c3'];
+  for(let i=0;i<110;i++){const d=document.createElement('div');d.className='confetti';d.style.left=Math.random()*100+'vw';d.style.background=cols[i%cols.length];
+    d.style.animationDuration=(2.2+Math.random()*2.2)+'s';d.style.animationDelay=(Math.random()*.6)+'s';d.style.transform=`rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(d);setTimeout(()=>d.remove(),5200);}}
+
+/* ---------- 모달 ---------- */
+function modal(html){const root=$('#modalRoot');root.innerHTML=`<div class="modal"><div class="sheet">${html}</div></div>`;
+  const m=root.querySelector('.modal');m.addEventListener('click',e=>{if(e.target===m)closeModal();});const x=m.querySelector('.x');if(x)x.onclick=closeModal;return m;}
+function closeModal(){$('#modalRoot').innerHTML='';}
+function noticeModal(title,body,btn){return new Promise(res=>{const m=modal(`<h2>${title}</h2><div class="ap-box">${body}</div><button class="btn primary mt16" id="nOk">${btn}</button>`);
+  m.querySelector('#nOk').onclick=()=>{closeModal();res();};});}
+
+function openDetail(res){
+  const rule=RULES[res.n-1];
+  const calc=[`<tr><td>판정 전 응모 점수</td><td>${fmtN(res.before)}</td></tr>`].concat(res.items.map(x=>`<tr><td>${esc(x.l)}${x.h?' (보류·예치)':''}${x.g?' (일반 점수 이관)':''}</td><td class="${x.d>0?'plus':x.d<0?'minus':'zero'}">${sgn(x.d)}</td></tr>`)).concat([`<tr class="sum"><td>판정 후 응모 점수</td><td>${fmtN(res.after)}</td></tr>`]).join('');
+  modal(`<button class="x">✕</button><h2>상세 판정 근거</h2><div class="sh-sub">공정채점위원회 판정서 · 제${res.n}문 · 문서번호 JDG-${pad(res.n)}-${String(S.hist.length).padStart(4,'0')}</div>
+  <div class="dl">
+    <div><span class="k">규정 번호</span><span><b>${esc(res.cl)}</b> 「${esc(rule.t)}」<br><small style="color:var(--sub)">${SEC[rule.s]}</small></span></div>
+    <div><span class="k">적용 대상</span><span>${esc(rule.target)}</span></div>
+    <div><span class="k">발생 조건</span><span>${esc(rule.cond)}</span></div>
+    <div><span class="k">문항</span><span>${esc(Q[res.n-1].t)} → 제출 답안 ${'①②③④'[res.chosen]} ${esc(Q[res.n-1].o[res.chosen])} (수학적 정답 ✓)</span></div>
+    <div><span class="k">처리 기록</span><span><ol>${res.rec.map(r=>`<li>${esc(r)}</li>`).join('')}</ol><small style="color:var(--sub)">입력 방식: ${({mouse:'마우스',touch:'터치',keyboard:'키보드'})[res.input]||'-'} · 선택 소요: ${sec(res.elapsed)}</small></span></div>
+    <div><span class="k">점수 계산</span><span><table class="calc">${calc}</table></span></div>
+    <div><span class="k">최종 판정</span><span><b>${esc(res.verdict)}</b></span></div>
+  </div>
+  <div class="disc">※ 본 규정은 게임 속 가상의 규정이며, 실제 법률·제도 또는 특정 브랜드의 규정이 아닙니다.</div>
+  <button class="btn mt12" id="dRb">📕 규정집에서 보기</button>`).querySelector('#dRb').onclick=()=>openRulebook(res.n);
+}
+
+function openRulebook(hl){
+  const applied={};S.hist.forEach(h=>{if(h.correct)applied[h.n]=h;});
+  const tabs=['ALL','A','B','C','D','E','APPEAL'];
+  const m=modal(`<button class="x">✕</button><h2>📕 공식 채점 규정집</h2><div class="sh-sub">공정채점위원회 · 전 50조 + 이의신청 규정 · 모든 참가자에게 동일하게 적용</div>
+  <div class="rb-tabs">${tabs.map(t=>`<button class="chip${t==='ALL'?' on':''}" data-t="${t}">${t==='ALL'?'전체':t==='APPEAL'?'이의신청':t}</button>`).join('')}</div><div id="rbList"></div>
+  <div class="disc">※ 본 규정집은 게임 속 가상 규정입니다. 실제 법률·제도 또는 브랜드 규정이 아닙니다.</div>`);
+  const render=t=>{const L=m.querySelector('#rbList');
+    if(t==='APPEAL'){L.innerHTML=APPEAL_RULES.map(a=>`<div class="rb-item"><div class="rb-h"><b>${a.t}</b><span class="rb-no">${a.no}</span></div><div class="rb-m">${a.d}</div></div>`).join('');return;}
+    L.innerHTML=RULES.filter(r=>t==='ALL'||r.s===t).map(r=>{const h=applied[r.n];
+      return `<div class="rb-item${h?' hit':''}${hl===r.n?' hl':''}" id="rb${r.n}"><div class="rb-h"><b>${r.t}</b><span class="rb-no">제${r.n}조</span></div>
+      <div class="rb-m"><span>적용 대상 </span>${esc(r.target)}</div><div class="rb-m"><span>발생 조건 </span>${esc(r.cond)}</div>
+      <div class="rb-st${h?' on':''}">${h?`● 적용 완료 — 제${r.n}문 (${esc(h.cl)}) · ${sgn(h.items.filter(x=>x.d<0).reduce((s,x)=>s+x.d,0))}점 처리`:'○ 제'+r.n+'문에서 적용 예정'}</div></div>`;}).join('');
+    if(hl){const el=m.querySelector('#rb'+hl);if(el)setTimeout(()=>el.scrollIntoView({block:'center'}),60);}};
+  m.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{m.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x===b));render(b.dataset.t);});
+  render('ALL');
+}
+
+/* ---------- 이의신청 ---------- */
+function openAppeal(res){
+  const kind=S.appeals%5;S.appeals++;save();
+  const head=`<button class="x">✕</button><h2>✋ 이의신청</h2><div class="sh-sub">대상 판정: 제${res.n}문 · ${esc(res.cl)}</div>`;
+  if(kind===0){
+    const m=modal(`${head}<div class="ap-box"><div class="ref">제A-1조 이의신청 수수료</div>이의신청을 접수하려면 <b>신청 수수료 1점</b>이 필요합니다.<br>현재 응모 점수: <b>${fmtN(S.official)}점</b></div>
+      <div class="acts"><button class="btn" id="apNo">신청 포기</button><button class="btn red" id="apPay">수수료 납부 후 신청</button></div>`);
+    m.querySelector('#apNo').onclick=()=>{m.querySelector('.sheet').innerHTML=`${head}<div class="ap-box"><div class="ref">제A-2조 신청 포기</div>신청을 포기하셨습니다. 포기는 해당 판정을 <b>수락</b>한 것으로 간주됩니다.<br><br>판정을 수락해 주셔서 감사합니다.</div><button class="btn primary mt12" id="apC">확인</button>`;m.querySelector('#apC').onclick=closeModal;m.querySelector('.x').onclick=closeModal;};
+    m.querySelector('#apPay').onclick=async()=>{
+      const sh=m.querySelector('.sheet');
+      if(S.official<1){sh.innerHTML=`${head}<div class="ap-box"><div class="ref">제A-1조 2항</div>잔여 점수가 부족하여 수수료를 납부할 수 없습니다. 수수료 납부가 불가능한 경우 이의신청을 할 수 없습니다.</div><button class="btn primary mt12" id="apC">확인</button>`;sh.querySelector('#apC').onclick=closeModal;sh.querySelector('.x').onclick=closeModal;return;}
+      S.official=r1(S.official-1);S.appealFees++;S.ded=r1(S.ded+1);save();hud(null,'down');
+      sh.innerHTML=`${head}<div class="ap-box">신청 수수료 1점이 납부되었습니다.<br><b>신청을 접수했습니다.</b> (접수번호 OBJ-${Date.now().toString().slice(-7)})</div><div class="spin mt16"></div><div style="text-align:center;font-size:13px;color:var(--sub)">이의신청 심사 중…</div>`;
+      await realWait(2200);
+      sh.innerHTML=`${head}<div class="ap-box"><div class="ref">제A-4조 이의신청 기한 · 제A-5조 수수료 반환</div>이의신청 기한은 <b>판정 이전</b>까지입니다. 본 판정은 정답 제출 이후 발생하였으므로, 신청 기한은 <b>정답 제출 이전에 종료</b>되었습니다.<br><br>납부하신 수수료 1점은 규정에 따라 반환되지 않습니다.</div><div class="ap-ok">반려</div><button class="btn primary mt12" id="apC">확인</button>`;
+      sh.querySelector('#apC').onclick=closeModal;sh.querySelector('.x').onclick=closeModal;};
+    return;
+  }
+  const R=[null,
+    {ref:'제A-6조 신청 대상',body:`이의신청은 <b>1차 심사 결과</b>에 대해서만 가능합니다.<br><br>· 1차 심사 (수학적 정답 판정): <b>정답 인정</b> — 이의 사유 없음<br>· 2차 심사 (규정 적용): ${esc(res.cl)} — 이의신청 대상 아님<br><br>해당 판정은 2차 심사 결과이므로 이의신청 대상이 아닙니다.`},
+    {ref:'제A-9조 첨부 서식',pre:true,body:`이의신청서에는 <b>서식 OBJ-7 (이의신청 사유서)</b>을 첨부해야 합니다.<br><br>서식 OBJ-7은 이의신청이 <b>승인된 후</b> 발급됩니다. 첨부 서식이 없으므로 반려합니다.`},
+    {ref:'제A-12조 심사위원회 정족수',pre:true,body:`이의신청 심사위원회는 재적 위원 과반수 출석으로 개의합니다.<br><br>· 재적 위원: 1명<br>· 과반수: 1명 초과<br>· 출석: 1명<br><br>정족수 미달로 심사를 개의할 수 없어 자동 반려되었습니다.`},
+    {ref:'제A-15조 상습 신청 관리',body:`이의신청 누적 ${S.appeals}회로 <b>상담 대기열</b>로 이관되었습니다.<br><br>현재 대기 순번: <b>51번</b> (제50문 종료 후 순차 진행)<br>예상 상담 시점: 게임 종료 이후`}][kind];
+  const m=modal(`${head}<div id="apBody"></div>`);const b=m.querySelector('#apBody');
+  const fin=()=>{b.innerHTML=`<div class="ap-box"><div class="ref">${R.ref}</div>${R.body}</div><div class="ap-ok">반려</div><button class="btn primary mt12" id="apC">확인</button>`;b.querySelector('#apC').onclick=closeModal;};
+  if(R.pre){b.innerHTML=`<div class="ap-box"><b>신청을 접수했습니다.</b><br>이의신청 수수료는 이번에 한해 면제되었습니다.</div><div class="spin mt16"></div>`;realWait(1700).then(fin);}else fin();
+}
+
+/* ---------- 메뉴 ---------- */
+function openMenu(){
+  const m=modal(`<button class="x">✕</button><h2>메뉴</h2><div class="sh-sub">진행 상황은 자동 저장됩니다.</div>
+  <button class="btn mt16" id="mRb">📕 공식 채점 규정집</button><button class="btn mt8" id="mHome">처음 화면으로 (저장 유지)</button><button class="btn red mt8" id="mReset">처음부터 다시 하기</button>`);
+  m.querySelector('#mRb').onclick=()=>openRulebook();
+  m.querySelector('#mHome').onclick=()=>{closeModal();location.reload();};
+  m.querySelector('#mReset').onclick=()=>{closeModal();S=fresh();save();startGame();};
+}
+
+/* ---------- 엔딩 ---------- */
+async function endScreen(){
+  show('end');
+  const short=r1(TARGET-S.official);const W=$('#endWrap');
+  const taxes=S.hist.filter(h=>h.correct).length;
+  W.innerHTML=`<div class="end-h"><div class="eyebrow">FINAL RESULT · 공정채점위원회</div><h2>최종 결과 발표</h2></div>
+  <div class="box result-tbl"><ul>
+    <li><span>총 문제</span><b>50개</b></li>
+    <li><span>실제 정답 수</span><b>${S.correct}개</b></li>
+    <li><span>공식 인정 점수</span><b>${fmtN(S.official)}점</b></li>
+    <li><span>상품 획득 조건</span><b>${TARGET}점</b></li>
+    <li><span>부족한 점수</span><b class="red">${fmtN(short)}점</b></li>
+    <li><span>상품</span><b>마뗑킴 카드지갑 (가상)</b></li>
+  </ul></div>
+  <div class="fail"><span>결과: 탈락</span></div>
+  <div class="judge mt16"><div class="avatar">⚖</div><div class="bubble" id="eb"></div></div>
+  <div id="endMore"></div>`;
+  await realWait(700);
+  await typeLines($('#eb'),['안타깝습니다.','50문제나 기회를 드렸는데.',`단 ${fmtN(short)}점이 부족해서 탈락하셨네요.`,'규정에 따라 모든 점수를 공정하게 계산했습니다.'],32);
+  await realWait(600);$('#eb').insertAdjacentHTML('beforeend','<p style="color:var(--sub)">……</p>');await realWait(1200);
+  const M=$('#endMore');
+  M.innerHTML=`<button class="btn red mt24" id="eProtest">😡 이거 억까잖아!</button><button class="btn ghost mt8" id="eRetry0">다시 도전하기</button>`;
+  $('#eRetry0').onclick=retry;
+  $('#eProtest').onclick=async()=>{
+    M.innerHTML=`<div class="judge mt16"><div class="avatar">⚖</div><div class="bubble" id="eb2"></div></div>`;
+    await typeLines($('#eb2'),['무슨 소리죠? 규정대로 처리했는데요?','결과에 불만이 있으신가요?','모든 판정에는 정당한 규정과 절차가 적용되었습니다.','문제는 모두 쉬웠습니다.','규정도 동일하게 적용했습니다.'],32);
+    await realWait(900);
+    M.insertAdjacentHTML('beforeend',`<div class="big">그냥 니<br>실력임 ㅋㅋ</div><div class="small-lines" id="sl"></div>`);
+    await realWait(1100);
+    await typeLines($('#sl'),['남 탓하지 마세요.','30점 맞히는 게 그렇게 어려웠나요?'],36);
+    await realWait(500);
+    M.insertAdjacentHTML('beforeend',`<div class="box mt24"><h3>정산 내역 요약</h3><ul>
+      <li><span>적용된 규정</span><b>${taxes}개 조항</b></li>
+      <li><span>세금·수수료·차감 누계</span><b>${fmtN(S.ded)}점</b></li>
+      <li><span>보류·예치 중인 점수</span><b>${fmtN(S.held)}점 (심사 중)</b></li>
+      <li><span>일반 점수 (응모 불가)</span><b>${fmtN(S.general)}점</b></li>
+      <li><span>이의신청</span><b>${S.appeals}회 (전부 반려)</b></li>
+      <li><span>이의신청 수수료 납부</span><b>${S.appealFees}점</b></li>
+    </ul></div>
+    <button class="btn primary mt16" id="eRetry">다시 도전하기</button><button class="btn ghost mt8" id="eRb">📕 규정집 다시 보기</button>
+    <div class="disc">※ 본 게임은 풍자 목적의 가상 게임이며 상품은 실제로 지급되지 않습니다. 마뗑킴 브랜드와 무관합니다.</div>`);
+    $('#eRetry').onclick=retry;$('#eRb').onclick=()=>openRulebook();
+    $('#eRetry').scrollIntoView({behavior:'smooth',block:'end'});
+  };
+}
+function retry(){const fast=S.fast;S=fresh();S.fast=fast;save();startGame();}
+
+if(IS_BROWSER) boot();
+if(typeof module!=='undefined') module.exports={Q,RULES,compute,commit,fresh,wrongResult};
+</script>
+</body>
+</html>
